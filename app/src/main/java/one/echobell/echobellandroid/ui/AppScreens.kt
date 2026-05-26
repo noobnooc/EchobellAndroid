@@ -4,8 +4,12 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.app.Activity
+import android.app.NotificationManager
+import android.annotation.SuppressLint
+import android.os.Build
+import android.provider.Settings
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +60,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -76,6 +81,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -91,11 +97,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -105,6 +114,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil3.compose.AsyncImage
 import one.echobell.echobellandroid.BuildConfig
+import one.echobell.echobellandroid.R
 import one.echobell.echobellandroid.extractSubscriptionToken
 import one.echobell.echobellandroid.data.Announcement
 import one.echobell.echobellandroid.data.AnnouncementLevel
@@ -190,17 +200,26 @@ fun EchobellApp(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { BottomNav(navController) },
         floatingActionButton = {
             val route = navController.currentBackStackEntryAsState().value?.destination?.route
             when (route) {
-                Routes.Records -> FloatingActionButton(onClick = { navController.navigate(Routes.Channels) }) {
+                Routes.Records -> FloatingActionButton(
+                    onClick = { navController.navigate(Routes.Channels) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) {
                     Icon(Icons.Default.Notifications, contentDescription = "Channels")
                 }
-                Routes.Channels -> FloatingActionButton(onClick = {
-                    if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.ChannelNew) else navController.navigate(Routes.Paywall)
-                }) {
+                Routes.Channels -> FloatingActionButton(
+                    onClick = {
+                        if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.ChannelNew) else navController.navigate(Routes.Paywall)
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) {
                     Icon(Icons.Default.Add, contentDescription = "New channel")
                 }
             }
@@ -286,19 +305,40 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
     var codeSent by rememberSaveable { mutableStateOf(false) }
     val emailValid = remember(email) { Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}$").matches(email.trim()) }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.surface),
+                .background(MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             item {
-                Spacer(Modifier.height(36.dp))
-                Text("Echobell", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
-                Text("Receive channel and webhook notifications on Android.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(28.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_echobell_mark),
+                            contentDescription = null,
+                            modifier = Modifier.size(38.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    Column {
+                        Text("Echobell", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                        Text("Webhook alerts, direct keys, and call notifications.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
             item {
                 AppCard {
@@ -358,7 +398,10 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
 @Composable
 private fun BottomNav(navController: NavHostController) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    NavigationBar {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp,
+    ) {
         listOf(
             Triple(Routes.Records, Icons.Default.Notifications, "Records"),
             Triple(Routes.Channels, Icons.Default.Link, "Channels"),
@@ -877,7 +920,7 @@ private fun ChannelFormScreen(
     channel: Channel?,
 ) {
     var name by rememberSaveable(channel?.remoteId) { mutableStateOf(channel?.name.orEmpty()) }
-    var colorHex by rememberSaveable(channel?.remoteId) { mutableStateOf(channel?.colorHex ?: DEFAULT_COLORS.random()) }
+    var colorHex by rememberSaveable(channel?.remoteId) { mutableStateOf(channel?.colorHex ?: DEFAULT_COLORS.first()) }
     var titleTemplate by rememberSaveable(channel?.remoteId) { mutableStateOf(channel?.titleTemplate.orEmpty()) }
     var bodyTemplate by rememberSaveable(channel?.remoteId) { mutableStateOf(channel?.bodyTemplate.orEmpty()) }
     var conditions by rememberSaveable(channel?.remoteId) { mutableStateOf(channel?.conditions.orEmpty()) }
@@ -1278,6 +1321,9 @@ private fun SettingsScreen(
             if (!state.notificationAuthorized) {
                 item { PermissionBanner(requestNotificationPermission) }
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && !context.canUseFullScreenIntent()) {
+                item { FullScreenIntentBanner { context.openFullScreenIntentSettings() } }
+            }
             item {
                 SectionTitle("Account")
                 AppCard {
@@ -1324,6 +1370,7 @@ private fun SettingsScreen(
                     SupportLink("Discord Group", "https://discord.gg/s4JqfrgccJ")
                     SupportLink("Telegram Group", "https://t.me/EchobellApp")
                     SupportLink("Privacy Policy", "https://echobell.one/privacy")
+                    SupportLink("Terms of Service", "https://echobell.one/terms")
                 }
             }
         }
@@ -1892,11 +1939,19 @@ private fun ScreenScaffold(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = navigationIcon,
                 actions = { actions() },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = MaterialTheme.colorScheme.primary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
+                ),
             )
         },
         content = content,
@@ -1913,13 +1968,15 @@ private fun BackOrEmpty(navController: NavHostController) {
 @Composable
 private fun AppCard(
     modifier: Modifier = Modifier,
-    colors: androidx.compose.material3.CardColors = CardDefaults.cardColors(),
+    colors: CardColors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = colors,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
     ) {
         Column(Modifier.padding(16.dp), content = content)
     }
@@ -1954,6 +2011,24 @@ private fun PermissionBanner(requestNotificationPermission: () -> Unit) {
         Spacer(Modifier.height(10.dp))
         Button(onClick = requestNotificationPermission, modifier = Modifier.fillMaxWidth()) {
             Text("Allow Notifications")
+        }
+    }
+}
+
+@Composable
+private fun FullScreenIntentBanner(openSettings: () -> Unit) {
+    AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Enable full-screen call alerts", fontWeight = FontWeight.SemiBold)
+                Text("Allow Echobell to open urgent call notifications while the screen is locked.")
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Button(onClick = openSettings, modifier = Modifier.fillMaxWidth()) {
+            Text("Open Settings")
         }
     }
 }
@@ -2049,11 +2124,11 @@ private fun AnnouncementPreview(announcement: Announcement, onClick: () -> Unit)
     }
 }
 
-private val DEFAULT_COLORS = listOf("#1565C0", "#00695C", "#AD1457", "#EF6C00", "#6A1B9A", "#2E7D32", "#C62828")
+private val DEFAULT_COLORS = listOf("#F97316", "#F59E0B", "#2563EB", "#0F766E", "#BE123C", "#7C3AED", "#15803D")
 
 private fun parseColor(hex: String): Color = runCatching {
-    Color(android.graphics.Color.parseColor(hex.ifBlank { "#1565C0" }))
-}.getOrDefault(Color(0xFF1565C0))
+    Color(hex.ifBlank { "#F97316" }.toColorInt())
+}.getOrDefault(EchobellOrange)
 
 private fun String.hiddenToken(): String =
     if (length <= 10) "*****" else "${take(5)}...${takeLast(5)}"
@@ -2123,5 +2198,23 @@ private fun Context.shareText(text: String) {
 
 private fun Context.openUrl(url: String?) {
     if (url.isNullOrBlank()) return
-    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    startActivity(Intent(Intent.ACTION_VIEW, url.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+}
+
+private fun Context.canUseFullScreenIntent(): Boolean =
+    Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE ||
+        getSystemService(NotificationManager::class.java)?.canUseFullScreenIntent() != false
+
+@SuppressLint("InlinedApi")
+private fun Context.openFullScreenIntentSettings() {
+    val packageUri = "package:$packageName".toUri()
+    val settingsIntent = Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT)
+        .setData(packageUri)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        .setData(packageUri)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    startActivity(
+        if (settingsIntent.resolveActivity(packageManager) != null) settingsIntent else fallbackIntent,
+    )
 }

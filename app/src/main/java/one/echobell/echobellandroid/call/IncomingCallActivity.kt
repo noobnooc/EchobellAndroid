@@ -3,6 +3,7 @@ package one.echobell.echobellandroid.call
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.WindowManager
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -55,6 +56,7 @@ class IncomingCallActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

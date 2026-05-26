@@ -31,7 +31,6 @@ object NotificationHelper {
     private const val CALL_TIMEOUT_MS = 60_000L
 
     fun ensureChannel(context: Context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(NotificationManager::class.java)
         val channel = NotificationChannel(
             CHANNEL_ID,
@@ -98,7 +97,7 @@ object NotificationHelper {
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(record.title)
             .setContentText(record.body)
             .setSubText(channelName ?: record.directKeyName)
@@ -146,8 +145,8 @@ object NotificationHelper {
             .setImportant(true)
             .build()
 
-        val notification = NotificationCompat.Builder(context, CALL_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+        val notificationBuilder = NotificationCompat.Builder(context, CALL_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(payload.displayCallerName)
             .setContentText(payload.body)
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -157,9 +156,13 @@ object NotificationHelper {
             .setAutoCancel(false)
             .setTimeoutAfter(CALL_TIMEOUT_MS)
             .setContentIntent(fullScreenPendingIntent)
-            .setFullScreenIntent(fullScreenPendingIntent, true)
             .setStyle(NotificationCompat.CallStyle.forIncomingCall(caller, dismissPendingIntent, answerPendingIntent))
-            .build()
+
+        if (canUseFullScreenIntent(context)) {
+            notificationBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
+        }
+
+        val notification = notificationBuilder.build()
 
         notify(context, payload.notificationId, notification)
     }
@@ -167,6 +170,14 @@ object NotificationHelper {
     private fun canPostNotifications(context: Context): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+    private fun canUseFullScreenIntent(context: Context): Boolean {
+        val hasFullScreenIntentPermission =
+            ContextCompat.checkSelfPermission(context, Manifest.permission.USE_FULL_SCREEN_INTENT) == PackageManager.PERMISSION_GRANTED
+        return hasFullScreenIntentPermission &&
+            (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE ||
+                context.getSystemService(NotificationManager::class.java)?.canUseFullScreenIntent() != false)
+    }
 
     @SuppressLint("MissingPermission")
     private fun notify(context: Context, notificationId: Int, notification: Notification) {

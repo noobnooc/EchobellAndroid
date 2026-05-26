@@ -1,0 +1,15 @@
+Echobell turns webhooks and channel events into reliable Android alerts.
+
+Create channels, subscribe this device, and receive records from services, scripts, automations, monitoring tools, and email triggers. Direct keys make it easy to trigger alerts without managing a full channel.
+
+Key features:
+
+- Channel and direct webhook notifications
+- Time-sensitive and call-style alert modes for urgent events
+- Custom title, body, link, condition, and note templates
+- Notification history stored on this device
+- Channel sharing and subscription controls
+- Premium support for unlimited channels, direct keys, and alert modes
+- Privacy, terms, and account deletion controls in settings
+
+Echobell is built for developers, operators, and anyone who needs actionable alerts from their own systems.
