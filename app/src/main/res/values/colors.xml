@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="echobell_orange">#F97316</color>
-    <color name="echobell_orange_deep">#EA580C</color>
-    <color name="echobell_icon_foreground">#FFFFF7F0</color>
+    <color name="echobell_orange_deep">#C2410C</color>
+    <color name="echobell_icon_foreground">#FFFFF6EA</color>
 </resources>

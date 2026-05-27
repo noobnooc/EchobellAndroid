@@ -389,11 +389,37 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun reportGoogleSubscription(productId: String, purchaseToken: String) {
-        runWithFreshJwt { jwt ->
-            api.reportGoogleSubscription(jwt, productId, purchaseToken)
-            refreshSession(silent = true)
-            showMessage("Subscription updated.")
+    fun reportGoogleSubscription(
+        productId: String,
+        purchaseToken: String,
+        onVerified: () -> Unit = {},
+        onFailure: () -> Unit = {},
+        showSuccessMessage: Boolean = true,
+    ) {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true) }
+            try {
+                val jwt = _state.value.jwt ?: throw ApiException(401, null, "Not signed in")
+                try {
+                    api.reportGoogleSubscription(jwt, productId, purchaseToken)
+                } catch (error: ApiException) {
+                    if (error.statusCode == 401) {
+                        api.reportGoogleSubscription(refreshSessionInternal(), productId, purchaseToken)
+                    } else {
+                        throw error
+                    }
+                }
+                onVerified()
+                refreshSessionInternal()
+                if (showSuccessMessage) {
+                    showMessage("Subscription updated.")
+                }
+            } catch (error: Exception) {
+                onFailure()
+                showMessage(error.readableMessage())
+            } finally {
+                _state.update { it.copy(busy = false) }
+            }
         }
     }
 

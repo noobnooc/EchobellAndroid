@@ -1,0 +1,1 @@
+Refined Echobell's Android release polish with updated app icons, cleaner Pixel-style screens, tighter status bar spacing, refreshed Play Store graphics, and more reliable Google Play subscription restore handling.

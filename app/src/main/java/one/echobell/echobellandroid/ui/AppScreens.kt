@@ -9,7 +9,6 @@ import android.app.NotificationManager
 import android.annotation.SuppressLint
 import android.os.Build
 import android.provider.Settings
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,11 +20,15 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -72,28 +75,30 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -105,6 +110,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -160,6 +169,13 @@ private object Routes {
     fun announcement(id: Int) = "announcement/$id"
 }
 
+private val TopLevelRoutes = setOf(
+    Routes.Records,
+    Routes.Channels,
+    Routes.Direct,
+    Routes.Settings,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EchobellApp(
@@ -199,15 +215,20 @@ fun EchobellApp(
         }
     }
 
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = { BottomNav(navController) },
+        bottomBar = {
+            if (currentRoute in TopLevelRoutes) {
+                BottomNav(navController)
+            }
+        },
         floatingActionButton = {
-            val route = navController.currentBackStackEntryAsState().value?.destination?.route
-            when (route) {
+            when (currentRoute) {
                 Routes.Records -> FloatingActionButton(
-                    onClick = { navController.navigate(Routes.Channels) },
+                    onClick = { navController.navigateTopLevel(Routes.Channels) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ) {
@@ -345,10 +366,10 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                     if (!codeSent) {
                         Text("Continue with Email", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
-                        OutlinedTextField(
+                        AppTextField(
                             value = email,
                             onValueChange = { email = it },
-                            label = { Text("Email address") },
+                            label = "Email address",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
@@ -367,10 +388,10 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                         Text("Enter Verification Code", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                         Text("A 6-digit code was sent to $email.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.height(12.dp))
-                        OutlinedTextField(
+                        AppTextField(
                             value = code,
                             onValueChange = { code = it.filter(Char::isDigit).take(6) },
-                            label = { Text("Verification code") },
+                            label = "Verification code",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
@@ -410,16 +431,28 @@ private fun BottomNav(navController: NavHostController) {
         ).forEach { (route, icon, label) ->
             NavigationBarItem(
                 selected = currentRoute == route,
-                onClick = {
-                    navController.navigate(route) {
-                        popUpTo(Routes.Records)
-                        launchSingleTop = true
-                    }
-                },
+                onClick = { navController.navigateTopLevel(route) },
                 icon = { Icon(icon, contentDescription = label) },
                 label = { Text(label) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
             )
         }
+    }
+}
+
+private fun NavHostController.navigateTopLevel(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 
@@ -437,7 +470,7 @@ private fun RecordsScreen(
             IconButton(onClick = { navController.navigate(Routes.Announcements) }) {
                 Icon(Icons.Default.Campaign, contentDescription = "Announcements")
             }
-            IconButton(onClick = { navController.navigate(Routes.Settings) }) {
+            IconButton(onClick = { navController.navigateTopLevel(Routes.Settings) }) {
                 Icon(Icons.Default.Settings, contentDescription = "Settings")
             }
         },
@@ -578,7 +611,6 @@ private fun RecordCard(
 private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navController: NavHostController) {
     ScreenScaffold(
         title = "Channels",
-        navigationIcon = { BackOrEmpty(navController) },
         actions = {
             IconButton(onClick = { viewModel.syncChannels() }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Sync")
@@ -597,7 +629,7 @@ private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navC
         ) {
             item {
                 AppCard(
-                    modifier = Modifier.clickable { navController.navigate(Routes.Direct) },
+                    modifier = Modifier.clickable { navController.navigateTopLevel(Routes.Direct) },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -973,7 +1005,7 @@ private fun ChannelFormScreen(
         ) {
             item {
                 AppCard {
-                    OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Channel name") }, modifier = Modifier.fillMaxWidth())
+                    AppTextField(value = name, onValueChange = { name = it }, label = "Channel name", modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(12.dp))
                     Text("Color", style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -995,18 +1027,18 @@ private fun ChannelFormScreen(
             item {
                 SectionTitle("Notification Templates")
                 AppCard {
-                    OutlinedTextField(
+                    AppTextField(
                         value = titleTemplate,
                         onValueChange = { titleTemplate = it },
-                        label = { Text("Title template") },
-                        placeholder = { Text("Defaults to channel name") },
+                        label = "Title template",
+                        placeholder = "Defaults to channel name",
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
+                    AppTextField(
                         value = bodyTemplate,
                         onValueChange = { bodyTemplate = it },
-                        label = { Text("Body template") },
+                        label = "Body template",
                         minLines = 3,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -1015,11 +1047,11 @@ private fun ChannelFormScreen(
             item {
                 SectionTitle("Advanced Settings")
                 AppCard {
-                    OutlinedTextField(value = conditions, onValueChange = { conditions = it }, label = { Text("Conditions") }, modifier = Modifier.fillMaxWidth())
+                    AppTextField(value = conditions, onValueChange = { conditions = it }, label = "Conditions", modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(value = externalLinkTemplate, onValueChange = { externalLinkTemplate = it }, label = { Text("Link template") }, modifier = Modifier.fillMaxWidth())
+                    AppTextField(value = externalLinkTemplate, onValueChange = { externalLinkTemplate = it }, label = "Link template", modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("Note") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+                    AppTextField(value = note, onValueChange = { note = it }, label = "Note", minLines = 2, modifier = Modifier.fillMaxWidth())
                 }
             }
             if (channel == null) {
@@ -1082,7 +1114,7 @@ private fun SubscribeScreen(
                     if (channelInfo == null) {
                         Text("Enter a subscription link or token.", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
-                        OutlinedTextField(value = input, onValueChange = { input = it; channelInfo = null }, label = { Text("Subscription link") }, modifier = Modifier.fillMaxWidth())
+                        AppTextField(value = input, onValueChange = { input = it; channelInfo = null }, label = "Subscription link", modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(12.dp))
                         Button(onClick = {
                             token?.let { viewModel.fetchChannelBySubscriptionToken(it) { channelInfo = it } }
@@ -1157,7 +1189,6 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
 
     ScreenScaffold(
         title = "Direct",
-        navigationIcon = { BackOrEmpty(navController) },
         actions = {
             IconButton(onClick = { viewModel.syncDirectKeys() }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Sync")
@@ -1209,7 +1240,7 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
             onDismissRequest = { newKeyDialog = false },
             title = { Text("New Direct Key") },
             text = {
-                OutlinedTextField(value = keyName, onValueChange = { keyName = it }, label = { Text("Key name") })
+                AppTextField(value = keyName, onValueChange = { keyName = it }, label = "Key name", modifier = Modifier.fillMaxWidth())
             },
             confirmButton = {
                 TextButton(
@@ -1305,7 +1336,6 @@ private fun SettingsScreen(
     val context = LocalContext.current
     ScreenScaffold(
         title = "Settings",
-        navigationIcon = { BackOrEmpty(navController) },
         actions = {
             IconButton(onClick = { navController.navigate(Routes.Announcements) }) {
                 Icon(Icons.Default.Campaign, contentDescription = "Announcements")
@@ -1379,9 +1409,10 @@ private fun SettingsScreen(
 
 @Composable
 private fun SubscriptionBanner(state: AppUiState, navController: NavHostController) {
-    AppCard(
+    BrandPanel(
         modifier = Modifier.clickable { navController.navigate(Routes.Paywall) },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Star, contentDescription = null)
@@ -1484,7 +1515,7 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
         AlertDialog(
             onDismissRequest = { renameDialog = false },
             title = { Text("Edit Name") },
-            text = { OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("New name") }) },
+            text = { AppTextField(value = name, onValueChange = { name = it }, label = "New name", modifier = Modifier.fillMaxWidth()) },
             confirmButton = {
                 TextButton(onClick = {
                     renameDialog = false
@@ -1596,7 +1627,7 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
         AlertDialog(
             onDismissRequest = { submitDialog = false },
             title = { Text("Enter Invite Code") },
-            text = { OutlinedTextField(value = code, onValueChange = { code = it.uppercase(Locale.US) }, label = { Text("Invite code") }) },
+            text = { AppTextField(value = code, onValueChange = { code = it.uppercase(Locale.US) }, label = "Invite code", modifier = Modifier.fillMaxWidth()) },
             confirmButton = {
                 TextButton(enabled = code.isNotBlank(), onClick = {
                     submitDialog = false
@@ -1644,12 +1675,28 @@ private fun RedeemDialog(balance: Int, onDismiss: () -> Unit, onRedeem: (String)
 @Composable
 private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navController: NavHostController) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val activity = context as? Activity
-    val billingManager = remember {
+    val obfuscatedAccountId = state.user?.id?.toString()
+    val premiumActive by rememberUpdatedState(state.premiumActive)
+    val billingManager = remember(obfuscatedAccountId) {
         GoogleBillingManager(
             context = context,
-            onPurchaseReady = { productId, purchaseToken ->
-                viewModel.reportGoogleSubscription(productId, purchaseToken)
+            obfuscatedAccountId = obfuscatedAccountId,
+            onPurchaseReady = { productId, purchaseToken, acknowledge, finishProcessing ->
+                viewModel.reportGoogleSubscription(
+                    productId = productId,
+                    purchaseToken = purchaseToken,
+                    onVerified = {
+                        acknowledge { acknowledged ->
+                            finishProcessing(acknowledged)
+                        }
+                    },
+                    onFailure = {
+                        finishProcessing(false)
+                    },
+                    showSuccessMessage = !premiumActive,
+                )
             },
             onMessage = viewModel::showMessage,
         )
@@ -1658,14 +1705,25 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
     val billingLoading by billingManager.loading
     var selectedProduct by remember { mutableStateOf<BillingProduct?>(null) }
 
-    LaunchedEffect(Unit) {
-        billingManager.start()
+    LaunchedEffect(premiumActive) {
+        if (!premiumActive) {
+            billingManager.start()
+        }
     }
-    DisposableEffect(billingManager) {
-        onDispose { billingManager.dispose() }
+    DisposableEffect(billingManager, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && !premiumActive) {
+                billingManager.restorePurchases()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            billingManager.dispose()
+        }
     }
     LaunchedEffect(billingProducts) {
-        if (selectedProduct == null) {
+        if (selectedProduct == null || billingProducts.none { it.productId == selectedProduct?.productId }) {
             selectedProduct = billingProducts.firstOrNull { it.productId.endsWith("annual") } ?: billingProducts.firstOrNull()
         }
     }
@@ -1680,7 +1738,7 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                BrandPanel {
                     Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(42.dp))
                     Spacer(Modifier.height(8.dp))
                     if (state.premiumActive) {
@@ -1729,8 +1787,21 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
                             ) {
                                 Text("Subscribe")
                             }
-                            TextButton(onClick = { billingManager.restorePurchases() }, modifier = Modifier.fillMaxWidth()) {
+                            TextButton(onClick = { billingManager.restorePurchases(userInitiated = true) }, modifier = Modifier.fillMaxWidth()) {
                                 Text("Restore Purchases")
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                TextButton(onClick = { context.openUrl("https://echobell.one/terms") }) {
+                                    Text("Terms")
+                                }
+                                Text("|", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                TextButton(onClick = { context.openUrl("https://echobell.one/privacy") }) {
+                                    Text("Privacy")
+                                }
                             }
                         }
                     }
@@ -1752,7 +1823,7 @@ private fun BillingProductRow(product: BillingProduct, selected: Boolean, onClic
     AppCard(
         modifier = Modifier.padding(vertical = 4.dp).clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         ),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1760,7 +1831,12 @@ private fun BillingProductRow(product: BillingProduct, selected: Boolean, onClic
                 Text(product.title, fontWeight = FontWeight.SemiBold)
                 Text(product.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Text(product.price, fontWeight = FontWeight.SemiBold)
+            Column(horizontalAlignment = Alignment.End) {
+                Text(product.price, fontWeight = FontWeight.SemiBold)
+                if (product.period.isNotBlank()) {
+                    Text(product.period, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
         }
     }
 }
@@ -1930,28 +2006,21 @@ private fun MissingScreen(message: String, navController: NavHostController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScreenScaffold(
     title: String,
-    navigationIcon: @Composable () -> Unit = {},
+    navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
-            TopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            CompactTopBar(
+                title = title,
                 navigationIcon = navigationIcon,
-                actions = { actions() },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    actionIconContentColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                ),
+                actions = actions,
             )
         },
         content = content,
@@ -1959,10 +2028,85 @@ private fun ScreenScaffold(
 }
 
 @Composable
+private fun CompactTopBar(
+    title: String,
+    navigationIcon: (@Composable () -> Unit)?,
+    actions: @Composable () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .heightIn(min = 52.dp)
+            .padding(start = if (navigationIcon == null) 20.dp else 4.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (navigationIcon == null) {
+            Icon(
+                painter = painterResource(R.drawable.ic_echobell_mark),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(26.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+        } else {
+            navigationIcon()
+        }
+        Text(
+            title,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f),
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            actions()
+        }
+    }
+}
+
+@Composable
 private fun BackOrEmpty(navController: NavHostController) {
     IconButton(onClick = { navController.popBackStack() }) {
         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
     }
+}
+
+@Composable
+private fun AppTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    singleLine: Boolean = false,
+    minLines: Int = 1,
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        placeholder = placeholder?.let { hint -> { Text(hint) } },
+        keyboardOptions = keyboardOptions,
+        singleLine = singleLine,
+        minLines = if (singleLine) 1 else minLines,
+        shape = RoundedCornerShape(8.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.44f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f),
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent,
+            cursorColor = MaterialTheme.colorScheme.primary,
+        ),
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -1976,9 +2120,37 @@ private fun AppCard(
         shape = RoundedCornerShape(8.dp),
         colors = colors,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
     ) {
         Column(Modifier.padding(16.dp), content = content)
+    }
+}
+
+@Composable
+private fun BrandPanel(
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor, contentColor = contentColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            Icon(
+                painter = painterResource(R.drawable.ic_echobell_mark),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(150.dp)
+                    .align(Alignment.CenterStart)
+                    .offset(x = (-72).dp, y = 22.dp)
+                    .graphicsLayer(alpha = 0.16f),
+                tint = contentColor,
+            )
+            Column(Modifier.padding(16.dp), content = content)
+        }
     }
 }
 
