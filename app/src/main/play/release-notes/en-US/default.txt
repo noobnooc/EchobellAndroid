@@ -1,1 +1,1 @@
-Refined Echobell's Android release polish with updated app icons, cleaner Pixel-style screens, tighter status bar spacing, refreshed Play Store graphics, and more reliable Google Play subscription restore handling.
+Refined Echobell's Android release polish, improved subscription restore handling, and removed obsolete full-screen intent settings for Play policy compatibility.

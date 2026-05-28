@@ -117,7 +117,7 @@ object NotificationHelper {
 
     private fun showIncomingCallNotification(context: Context, payload: IncomingCallPayload) {
         val showIntent = payload.toIntent(context)
-        val fullScreenPendingIntent = PendingIntent.getActivity(
+        val showPendingIntent = PendingIntent.getActivity(
             context,
             payload.notificationId,
             showIntent,
@@ -155,12 +155,8 @@ object NotificationHelper {
             .setOngoing(true)
             .setAutoCancel(false)
             .setTimeoutAfter(CALL_TIMEOUT_MS)
-            .setContentIntent(fullScreenPendingIntent)
+            .setContentIntent(showPendingIntent)
             .setStyle(NotificationCompat.CallStyle.forIncomingCall(caller, dismissPendingIntent, answerPendingIntent))
-
-        if (canUseFullScreenIntent(context)) {
-            notificationBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
-        }
 
         val notification = notificationBuilder.build()
 
@@ -170,14 +166,6 @@ object NotificationHelper {
     private fun canPostNotifications(context: Context): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-
-    private fun canUseFullScreenIntent(context: Context): Boolean {
-        val hasFullScreenIntentPermission =
-            ContextCompat.checkSelfPermission(context, Manifest.permission.USE_FULL_SCREEN_INTENT) == PackageManager.PERMISSION_GRANTED
-        return hasFullScreenIntentPermission &&
-            (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE ||
-                context.getSystemService(NotificationManager::class.java)?.canUseFullScreenIntent() != false)
-    }
 
     @SuppressLint("MissingPermission")
     private fun notify(context: Context, notificationId: Int, notification: Notification) {

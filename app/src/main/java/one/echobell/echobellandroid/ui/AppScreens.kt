@@ -5,10 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.app.Activity
-import android.app.NotificationManager
-import android.annotation.SuppressLint
-import android.os.Build
-import android.provider.Settings
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
@@ -1848,9 +1844,6 @@ private fun SettingsScreen(
             if (!state.notificationAuthorized) {
                 item { PermissionBanner(requestNotificationPermission) }
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && !context.canUseFullScreenIntent()) {
-                item { FullScreenIntentBanner { context.openFullScreenIntentSettings() } }
-            }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionTitle("Account")
@@ -2748,36 +2741,6 @@ private fun PermissionBanner(requestNotificationPermission: () -> Unit) {
 }
 
 @Composable
-private fun FullScreenIntentBanner(openSettings: () -> Unit) {
-    AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-        Row(verticalAlignment = Alignment.Top) {
-            Icon(
-                Icons.Default.Phone,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(top = 2.dp)
-            )
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Enable full-screen call alerts", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text("Allow Echobell to open urgent call notifications while the screen is locked.", color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-        Button(
-            onClick = openSettings,
-            modifier = Modifier.fillMaxWidth(),
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text("Open Settings")
-        }
-    }
-}
-
-@Composable
 private fun LimitBanner(text: String, onUpgrade: () -> Unit) {
     AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2965,22 +2928,4 @@ private fun Context.shareText(text: String) {
 private fun Context.openUrl(url: String?) {
     if (url.isNullOrBlank()) return
     startActivity(Intent(Intent.ACTION_VIEW, url.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-}
-
-private fun Context.canUseFullScreenIntent(): Boolean =
-    Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE ||
-        getSystemService(NotificationManager::class.java)?.canUseFullScreenIntent() != false
-
-@SuppressLint("InlinedApi")
-private fun Context.openFullScreenIntentSettings() {
-    val packageUri = "package:$packageName".toUri()
-    val settingsIntent = Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT)
-        .setData(packageUri)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        .setData(packageUri)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    startActivity(
-        if (settingsIntent.resolveActivity(packageManager) != null) settingsIntent else fallbackIntent,
-    )
 }
