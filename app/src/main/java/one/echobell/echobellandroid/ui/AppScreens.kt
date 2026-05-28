@@ -43,11 +43,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -67,6 +69,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -76,6 +79,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -86,6 +90,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -510,7 +516,7 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
 private fun BottomNav(navController: NavHostController) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.background,
         tonalElevation = 0.dp,
     ) {
         listOf(
@@ -525,9 +531,9 @@ private fun BottomNav(navController: NavHostController) {
                 icon = { Icon(icon, contentDescription = label) },
                 label = { Text(label) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primary,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
@@ -810,11 +816,14 @@ private fun RecordCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navController: NavHostController) {
+    val uriHandler = LocalUriHandler.current
+    var showIntro by rememberSaveable { mutableStateOf(true) }
+
     ScreenScaffold(
         title = "Channels",
         actions = {
-            IconButton(onClick = { viewModel.syncChannels() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Sync")
+            IconButton(onClick = { uriHandler.openUri("https://echobell.one/en/docs/template") }) {
+                Icon(Icons.AutoMirrored.Filled.Help, contentDescription = "Documentation")
             }
             IconButton(onClick = {
                 if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.ChannelNew) else navController.navigate(Routes.Paywall)
@@ -828,17 +837,27 @@ private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navC
             contentPadding = padding.plus(PaddingValues(16.dp)),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item {
-                AppCard(
-                    modifier = Modifier.clickable { navController.navigateTopLevel(Routes.Direct) },
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Key, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("Direct", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                            Text("Send notifications via webhook without channel setup.")
+            if (showIntro) {
+                item {
+                    AppCard(
+                        modifier = Modifier.clickable { uriHandler.openUri("https://echobell.one/en/docs/template") },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    ) {
+                        Row(verticalAlignment = Alignment.Top) {
+                            Icon(
+                                Icons.Default.Link,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("Channels", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text("Subscribe to channels to receive group alerts and topic notifications.", color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                            }
+                            IconButton(onClick = { showIntro = false }) {
+                                Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                            }
                         }
                     }
                 }
@@ -894,13 +913,37 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
 
 @Composable
 private fun StatusChip(channel: Channel) {
-    val label = when {
-        channel.detached -> "Inactive"
-        channel.isAdmin -> "Managed"
-        channel.subscribedAt != null -> "Subscribed"
-        else -> "Available"
+    val (label, containerColor, textColor) = when {
+        channel.detached -> Triple(
+            "Inactive",
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+            MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        channel.isAdmin -> Triple(
+            "Managed",
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer
+        )
+        channel.subscribedAt != null -> Triple(
+            "Subscribed",
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        else -> Triple(
+            "Available",
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer
+        )
     }
-    AssistChip(onClick = {}, label = { Text(label) })
+    AssistChip(
+        onClick = {},
+        label = { Text(label) },
+        border = null,
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = containerColor,
+            labelColor = textColor
+        )
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -949,7 +992,11 @@ private fun ChannelDetailScreen(
                         StatusChip(channel)
                     }
                     channel.note?.takeIf { it.isNotBlank() }?.let {
-                        HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
                         Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -1018,28 +1065,43 @@ private fun ChannelDetailScreen(
             }
 
             item {
-                SectionTitle("Notification Templates")
-                AppCard {
-                    Text(channel.titleTemplate, fontWeight = FontWeight.SemiBold)
-                    HorizontalDivider(Modifier.padding(vertical = 10.dp))
-                    Text(channel.bodyTemplate, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Notification Templates")
+                    AppCard {
+                        Text(channel.titleTemplate, fontWeight = FontWeight.SemiBold)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
+                        Text(channel.bodyTemplate, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
             if (channel.isAdmin && !channel.conditions.isNullOrBlank()) {
                 item {
-                    SectionTitle("Conditions")
-                    AppCard { Text(channel.conditions.orEmpty()) }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SectionTitle("Conditions")
+                        AppCard { Text(channel.conditions.orEmpty()) }
+                    }
                 }
             }
             if (channel.isAdmin && !channel.externalLinkTemplate.isNullOrBlank()) {
                 item {
-                    SectionTitle("Link Template")
-                    AppCard { Text(channel.externalLinkTemplate.orEmpty()) }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SectionTitle("Link Template")
+                        AppCard { Text(channel.externalLinkTemplate.orEmpty()) }
+                    }
                 }
             }
             if (records.isNotEmpty()) {
                 item {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp, bottom = 4.dp)
+                    ) {
                         SectionTitle("Recent Records", Modifier.weight(1f))
                         TextButton(onClick = { viewModel.clearRecordsForChannel(channel.remoteId) }) {
                             Text("Delete All", color = MaterialTheme.colorScheme.error)
@@ -1056,7 +1118,11 @@ private fun ChannelDetailScreen(
             }
             if (channel.isAdmin && !channel.detached) {
                 item {
-                    OutlinedButton(onClick = { navController.navigate(Routes.subscribers(channel.remoteId)) }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { navController.navigate(Routes.subscribers(channel.remoteId)) },
+                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Icon(Icons.Default.Person, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text("Manage Subscribers")
@@ -1065,7 +1131,11 @@ private fun ChannelDetailScreen(
             }
             if (channel.isAdmin || channel.detached) {
                 item {
-                    OutlinedButton(onClick = { deleteDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { deleteDialog = true },
+                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.width(8.dp))
                         Text("Delete Channel", color = MaterialTheme.colorScheme.error)
@@ -1116,28 +1186,79 @@ private fun TokenPanel(
     AppCard {
         Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
-        Text(
-            if (visible) token else token.hiddenToken(),
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.clickable { visible = !visible },
-            maxLines = 1,
-            overflow = TextOverflow.MiddleEllipsis,
-        )
-        HorizontalDivider(Modifier.padding(vertical = 8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onReset) {
-                Icon(Icons.Default.Refresh, contentDescription = null)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .clickable { visible = !visible }
+                .padding(vertical = 10.dp, horizontal = 12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = if (visible) token else token.hiddenToken(),
+                    fontFamily = FontFamily.Monospace,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (visible) "Hide" else "Show",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(18.dp)
+                )
             }
-            Button(onClick = { onCopy(primaryActionLabel, primaryValue) }, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Default.ContentCopy, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text(primaryActionLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 10.dp),
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = onReset,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Button(
+                onClick = { onCopy(primaryActionLabel, primaryValue) },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(primaryActionLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium)
             }
             if (secondaryActionLabel != null && secondaryValue != null) {
-                Button(onClick = { onCopy(secondaryActionLabel, secondaryValue) }, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = null)
-                    Spacer(Modifier.width(6.dp))
-                    Text(secondaryActionLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Button(
+                    onClick = { onCopy(secondaryActionLabel, secondaryValue) },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(secondaryActionLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -1247,86 +1368,92 @@ private fun ChannelFormScreen(
                 }
             }
             item {
-                SectionTitle("Notification Templates")
-                AppCard {
-                    AppTextField(
-                        value = titleTemplate,
-                        onValueChange = { titleTemplate = it },
-                        label = "Title template",
-                        placeholder = "Defaults to channel name",
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    AppTextField(
-                        value = bodyTemplate,
-                        onValueChange = { bodyTemplate = it },
-                        label = "Body template *",
-                        minLines = 3,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                        isError = hasAttemptedSave && bodyTemplate.isBlank(),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    if (hasAttemptedSave && bodyTemplate.isBlank()) {
-                        Spacer(Modifier.height(4.dp))
-                        Text("Body template is required", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Notification Templates")
+                    AppCard {
+                        AppTextField(
+                            value = titleTemplate,
+                            onValueChange = { titleTemplate = it },
+                            label = "Title template",
+                            placeholder = "Defaults to channel name",
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        AppTextField(
+                            value = bodyTemplate,
+                            onValueChange = { bodyTemplate = it },
+                            label = "Body template *",
+                            minLines = 3,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                            isError = hasAttemptedSave && bodyTemplate.isBlank(),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        if (hasAttemptedSave && bodyTemplate.isBlank()) {
+                            Spacer(Modifier.height(4.dp))
+                            Text("Body template is required", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
             item {
-                SectionTitle("Advanced Settings")
-                AppCard {
-                    AppTextField(
-                        value = conditions,
-                        onValueChange = { conditions = it },
-                        label = "Conditions",
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    AppTextField(
-                        value = externalLinkTemplate,
-                        onValueChange = { externalLinkTemplate = it },
-                        label = "Link template",
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    AppTextField(
-                        value = note,
-                        onValueChange = { note = it },
-                        label = "Note",
-                        minLines = 2,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Advanced Settings")
+                    AppCard {
+                        AppTextField(
+                            value = conditions,
+                            onValueChange = { conditions = it },
+                            label = "Conditions",
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        AppTextField(
+                            value = externalLinkTemplate,
+                            onValueChange = { externalLinkTemplate = it },
+                            label = "Link template",
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        AppTextField(
+                            value = note,
+                            onValueChange = { note = it },
+                            label = "Note",
+                            minLines = 2,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
             if (channel == null) {
                 item {
-                    SectionTitle("Subscription")
-                    AppCard {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text("Subscribe after creation")
-                                Text("This device will receive notifications immediately.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SectionTitle("Subscription")
+                        AppCard {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text("Subscribe after creation")
+                                    Text("This device will receive notifications immediately.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Switch(checked = autoSubscribe, onCheckedChange = { autoSubscribe = it })
                             }
-                            Switch(checked = autoSubscribe, onCheckedChange = { autoSubscribe = it })
-                        }
-                        if (autoSubscribe) {
-                            Spacer(Modifier.height(12.dp))
-                            NotificationTypeSelector(
-                                selected = notificationType,
-                                premiumActive = state.premiumActive,
-                                onPaywall = { navController.navigate(Routes.Paywall) },
-                                onSelected = { notificationType = it },
-                            )
+                            if (autoSubscribe) {
+                                Spacer(Modifier.height(12.dp))
+                                NotificationTypeSelector(
+                                    selected = notificationType,
+                                    premiumActive = state.premiumActive,
+                                    onPaywall = { navController.navigate(Routes.Paywall) },
+                                    onSelected = { notificationType = it },
+                                )
+                            }
                         }
                     }
                 }
@@ -1465,14 +1592,16 @@ private fun ChannelPreview(channel: ApiChannel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, navController: NavHostController) {
+    val uriHandler = LocalUriHandler.current
+    var showIntro by rememberSaveable { mutableStateOf(true) }
     var newKeyDialog by rememberSaveable { mutableStateOf(false) }
     var keyName by rememberSaveable { mutableStateOf("") }
 
     ScreenScaffold(
         title = "Direct",
         actions = {
-            IconButton(onClick = { viewModel.syncDirectKeys() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Sync")
+            IconButton(onClick = { uriHandler.openUri("https://echobell.one/en/docs/direct") }) {
+                Icon(Icons.AutoMirrored.Filled.Help, contentDescription = "Documentation")
             }
             IconButton(onClick = {
                 if (state.canCreateDirectKey) newKeyDialog = true else navController.navigate(Routes.Paywall)
@@ -1486,14 +1615,27 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
             contentPadding = padding.plus(PaddingValues(16.dp)),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item {
-                AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Key, contentDescription = null)
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text("Send notifications directly via webhook.", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                            Text("No channel setup is required.")
+            if (showIntro) {
+                item {
+                    AppCard(
+                        modifier = Modifier.clickable { uriHandler.openUri("https://echobell.one/en/docs/direct") },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    ) {
+                        Row(verticalAlignment = Alignment.Top) {
+                            Icon(
+                                Icons.Default.Key,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("Direct Webhooks", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text("Send notifications directly using direct keys and simple HTTP requests.", color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                            }
+                            IconButton(onClick = { showIntro = false }) {
+                                Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                            }
                         }
                     }
                 }
@@ -1569,35 +1711,93 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
 
     AppCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier
+                    .size(width = 6.dp, height = 24.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+            Spacer(Modifier.width(12.dp))
             Text(directKey.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             Text("Key", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        HorizontalDivider(Modifier.padding(vertical = 10.dp))
-        Text(
-            if (visible) directKey.token else directKey.token.hiddenToken(),
-            fontFamily = FontFamily.Monospace,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.clickable { visible = !visible },
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 10.dp),
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
         )
-        HorizontalDivider(Modifier.padding(vertical = 10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            IconButton(onClick = { resetDialog = true }) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .clickable { visible = !visible }
+                .padding(vertical = 10.dp, horizontal = 12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = if (visible) directKey.token else directKey.token.hiddenToken(),
+                    fontFamily = FontFamily.Monospace,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (visible) "Hide" else "Show",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 10.dp),
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedIconButton(
+                onClick = { resetDialog = true },
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+            ) {
                 Icon(Icons.Default.Refresh, contentDescription = "Reset")
             }
-            Button(onClick = {
-                context.copyToClipboard("Webhook", webhook)
-                viewModel.showMessage("Webhook copied.")
-            }, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Default.ContentCopy, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text("Webhook", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Button(
+                onClick = {
+                    context.copyToClipboard("Webhook", webhook)
+                    viewModel.showMessage("Webhook copied.")
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(4.dp))
+                Text("Webhook", maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium)
             }
-            IconButton(onClick = { clearDialog = true }) {
+            OutlinedIconButton(
+                onClick = { clearDialog = true },
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+            ) {
                 Icon(Icons.Default.VisibilityOff, contentDescription = "Clear records")
             }
-            IconButton(onClick = { deleteDialog = true }) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+            OutlinedIconButton(
+                onClick = { deleteDialog = true },
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                colors = IconButtonDefaults.outlinedIconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
             }
         }
     }
@@ -1652,20 +1852,22 @@ private fun SettingsScreen(
                 item { FullScreenIntentBanner { context.openFullScreenIntentSettings() } }
             }
             item {
-                SectionTitle("Account")
-                AppCard {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Person, contentDescription = null)
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("Hello, ${state.user?.name ?: "User"}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                            Text(state.user?.email ?: "#${state.user?.id ?: 0}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Account")
+                    AppCard {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Person, contentDescription = null)
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("Hello, ${state.user?.name ?: "User"}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                Text(state.user?.email ?: "#${state.user?.id ?: 0}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            IconButton(onClick = { navController.navigate(Routes.User) }) {
+                                Icon(Icons.Default.Settings, contentDescription = "User settings")
+                            }
                         }
-                        IconButton(onClick = { navController.navigate(Routes.User) }) {
-                            Icon(Icons.Default.Settings, contentDescription = "User settings")
-                        }
+                        Text("Channel and subscription data are stored on Echobell servers. Notification records stay on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text("Channel and subscription data are stored on Echobell servers. Notification records stay on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             item {
@@ -1678,26 +1880,18 @@ private fun SettingsScreen(
                     navController.navigate(Routes.Invite)
                 }
             }
+
             item {
-                SectionTitle("Records")
-                AppCard {
-                    OutlinedButton(onClick = { viewModel.markAllRecordsRead() }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Mark All as Read")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Support")
+                    AppCard {
+                        SupportLink("Email Support", "mailto:echobell@weelone.com")
+                        SupportLink("X (Twitter)", "https://x.com/EchobellApp")
+                        SupportLink("Discord Group", "https://discord.gg/s4JqfrgccJ")
+                        SupportLink("Telegram Group", "https://t.me/EchobellApp")
+                        SupportLink("Privacy Policy", "https://echobell.one/privacy")
+                        SupportLink("Terms of Service", "https://echobell.one/terms")
                     }
-                    OutlinedButton(onClick = { viewModel.deleteAllRecords() }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Delete All Notifications", color = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
-            item {
-                SectionTitle("Support")
-                AppCard {
-                    SupportLink("Email Support", "mailto:echobell@weelone.com")
-                    SupportLink("X (Twitter)", "https://x.com/EchobellApp")
-                    SupportLink("Discord Group", "https://discord.gg/s4JqfrgccJ")
-                    SupportLink("Telegram Group", "https://t.me/EchobellApp")
-                    SupportLink("Privacy Policy", "https://echobell.one/privacy")
-                    SupportLink("Terms of Service", "https://echobell.one/terms")
                 }
             }
         }
@@ -1711,8 +1905,8 @@ private fun SubscriptionBanner(state: AppUiState, navController: NavHostControll
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Star, contentDescription = null)
+        Row(verticalAlignment = Alignment.Top) {
+            Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.padding(top = 2.dp))
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 if (state.premiumActive) {
@@ -1734,7 +1928,17 @@ private fun SettingsAction(icon: ImageVector, title: String, trailing: String? =
             Icon(icon, contentDescription = null)
             Spacer(Modifier.width(12.dp))
             Text(title, modifier = Modifier.weight(1f))
-            if (trailing != null) AssistChip(onClick = {}, label = { Text(trailing) })
+            if (trailing != null) {
+                AssistChip(
+                    onClick = {},
+                    label = { Text(trailing) },
+                    border = null,
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
         }
     }
 }
@@ -1782,21 +1986,34 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
                 }
             }
             item {
-                OutlinedButton(onClick = { renameDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { renameDialog = true },
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Icon(Icons.Default.Edit, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Edit Name")
                 }
             }
             item {
-                OutlinedButton(onClick = { signOutDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { signOutDialog = true },
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(8.dp))
                     Text("Sign Out", color = MaterialTheme.colorScheme.error)
                 }
             }
             item {
-                OutlinedButton(enabled = !hasManagedChannels, onClick = { deleteDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    enabled = !hasManagedChannels,
+                    onClick = { deleteDialog = true },
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = if (hasManagedChannels) 0.15f else 0.35f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(8.dp))
                     Text("Delete Account", color = MaterialTheme.colorScheme.error)
@@ -1900,7 +2117,11 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
                         Text("Have an invite code?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Text("Enter a friend's code to earn bonus points.")
                         Spacer(Modifier.height(10.dp))
-                        OutlinedButton(onClick = { submitDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { submitDialog = true },
+                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text("Enter Invite Code")
                         }
                     }
@@ -1912,7 +2133,11 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
                     InfoRow("Friend signs up with your code", "+100 points for them")
                     InfoRow("Friend subscribes monthly", "+20 points for you")
                     InfoRow("Friend subscribes annual", "+200 points for you")
-                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                    )
                     InfoRow("Redeem 1 month premium", "200 points")
                     InfoRow("Redeem 1 year premium", "2000 points")
                 }
@@ -2056,48 +2281,54 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
                 }
             }
             item {
-                SectionTitle("Google Play")
-                AppCard {
-                    when {
-                        state.premiumActive -> Text("Premium is active on this account.")
-                        billingLoading -> CircularProgressIndicator()
-                        billingProducts.isEmpty() -> {
-                            Text("Google Play products are not available in this build or on this device.")
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedButton(onClick = { billingManager.start() }, modifier = Modifier.fillMaxWidth()) {
-                                Text("Retry")
-                            }
-                        }
-                        else -> {
-                            billingProducts.forEach { product ->
-                                BillingProductRow(
-                                    product = product,
-                                    selected = selectedProduct?.productId == product.productId,
-                                    onClick = { selectedProduct = product },
-                                )
-                            }
-                            Spacer(Modifier.height(10.dp))
-                            Button(
-                                enabled = activity != null && selectedProduct != null,
-                                onClick = { selectedProduct?.let { product -> activity?.let { billingManager.launchPurchase(it, product) } } },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text("Subscribe")
-                            }
-                            TextButton(onClick = { billingManager.restorePurchases(userInitiated = true) }, modifier = Modifier.fillMaxWidth()) {
-                                Text("Restore Purchases")
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                TextButton(onClick = { context.openUrl("https://echobell.one/terms") }) {
-                                    Text("Terms")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Google Play")
+                    AppCard {
+                        when {
+                            state.premiumActive -> Text("Premium is active on this account.")
+                            billingLoading -> CircularProgressIndicator()
+                            billingProducts.isEmpty() -> {
+                                Text("Google Play products are not available in this build or on this device.")
+                                Spacer(Modifier.height(8.dp))
+                                OutlinedButton(
+                                    onClick = { billingManager.start() },
+                                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Retry")
                                 }
-                                Text("|", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                TextButton(onClick = { context.openUrl("https://echobell.one/privacy") }) {
-                                    Text("Privacy")
+                            }
+                            else -> {
+                                billingProducts.forEach { product ->
+                                    BillingProductRow(
+                                        product = product,
+                                        selected = selectedProduct?.productId == product.productId,
+                                        onClick = { selectedProduct = product },
+                                    )
+                                }
+                                Spacer(Modifier.height(10.dp))
+                                Button(
+                                    enabled = activity != null && selectedProduct != null,
+                                    onClick = { selectedProduct?.let { product -> activity?.let { billingManager.launchPurchase(it, product) } } },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Text("Subscribe")
+                                }
+                                TextButton(onClick = { billingManager.restorePurchases(userInitiated = true) }, modifier = Modifier.fillMaxWidth()) {
+                                    Text("Restore Purchases")
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    TextButton(onClick = { context.openUrl("https://echobell.one/terms") }) {
+                                        Text("Terms")
+                                    }
+                                    Text("|", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    TextButton(onClick = { context.openUrl("https://echobell.one/privacy") }) {
+                                        Text("Privacy")
+                                    }
                                 }
                             }
                         }
@@ -2222,8 +2453,24 @@ private fun AnnouncementDetailScreen(announcement: Announcement, viewModel: Echo
                     Text(announcement.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        AssistChip(onClick = {}, label = { Text(announcement.level.label()) })
-                        AssistChip(onClick = {}, label = { Text(formatDate(announcement.updatedAt)) })
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(announcement.level.label()) },
+                            border = null,
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = announcement.level.color().copy(alpha = 0.15f),
+                                labelColor = announcement.level.color()
+                            )
+                        )
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(formatDate(announcement.updatedAt)) },
+                            border = null,
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
                     }
                     announcement.imageUrl?.takeIf { it.isNotBlank() }?.let {
                         Spacer(Modifier.height(12.dp))
@@ -2435,7 +2682,7 @@ private fun BrandPanel(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor, contentColor = contentColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
@@ -2444,13 +2691,13 @@ private fun BrandPanel(
                 painter = painterResource(R.drawable.ic_echobell_mark),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(150.dp)
+                    .size(110.dp)
                     .align(Alignment.CenterStart)
-                    .offset(x = (-72).dp, y = 22.dp)
+                    .offset(x = (-50).dp, y = 15.dp)
                     .graphicsLayer(alpha = 0.16f),
                 tint = contentColor,
             )
-            Column(Modifier.padding(16.dp), content = content)
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), content = content)
         }
     }
 }
@@ -2472,17 +2719,29 @@ private fun EmptyState(icon: ImageVector, title: String, description: String) {
 
 @Composable
 private fun PermissionBanner(requestNotificationPermission: () -> Unit) {
-    AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Notifications, contentDescription = null)
+    AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+        Row(verticalAlignment = Alignment.Top) {
+            Icon(
+                Icons.Default.Notifications,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(top = 2.dp)
+            )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Notification permission needed", fontWeight = FontWeight.SemiBold)
-                Text("Allow notifications so channel events can be delivered.")
+                Text("Notification permission needed", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text("Allow notifications so channel events can be delivered.", color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
             }
         }
         Spacer(Modifier.height(10.dp))
-        Button(onClick = requestNotificationPermission, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = requestNotificationPermission,
+            modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
             Text("Allow Notifications")
         }
     }
@@ -2491,16 +2750,28 @@ private fun PermissionBanner(requestNotificationPermission: () -> Unit) {
 @Composable
 private fun FullScreenIntentBanner(openSettings: () -> Unit) {
     AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+        Row(verticalAlignment = Alignment.Top) {
+            Icon(
+                Icons.Default.Phone,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(top = 2.dp)
+            )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Enable full-screen call alerts", fontWeight = FontWeight.SemiBold)
-                Text("Allow Echobell to open urgent call notifications while the screen is locked.")
+                Text("Enable full-screen call alerts", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text("Allow Echobell to open urgent call notifications while the screen is locked.", color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
             }
         }
         Spacer(Modifier.height(10.dp))
-        Button(onClick = openSettings, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = openSettings,
+            modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
             Text("Open Settings")
         }
     }
@@ -2508,10 +2779,15 @@ private fun FullScreenIntentBanner(openSettings: () -> Unit) {
 
 @Composable
 private fun LimitBanner(text: String, onUpgrade: () -> Unit) {
-    AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
+    AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text, modifier = Modifier.weight(1f))
-            TextButton(onClick = onUpgrade) {
+            Text(text, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onPrimaryContainer)
+            TextButton(
+                onClick = onUpgrade,
+                colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
                 Text("Upgrade")
             }
         }
@@ -2520,7 +2796,14 @@ private fun LimitBanner(text: String, onUpgrade: () -> Unit) {
 
 @Composable
 private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
-    Text(text, modifier = modifier.padding(horizontal = 4.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(
+        text = text,
+        modifier = modifier
+            .padding(horizontal = 4.dp)
+            .padding(top = 10.dp),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 @Composable
@@ -2546,15 +2829,25 @@ private fun NotificationTypeSelector(
                 onClick = {
                     if (type == NotificationType.Calling && !premiumActive) onPaywall() else onSelected(type)
                 },
-                label = { Text(type.label) },
+                label = { Text(type.label, style = MaterialTheme.typography.labelMedium) },
+                border = null,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    iconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
                 leadingIcon = {
                     Icon(
-                        when (type) {
+                        imageVector = when (type) {
                             NotificationType.Active -> Icons.Default.Notifications
                             NotificationType.TimeSensitive -> Icons.Default.Info
                             NotificationType.Calling -> Icons.Default.Phone
                         },
                         contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 },
             )
