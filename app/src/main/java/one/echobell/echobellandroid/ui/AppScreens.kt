@@ -9,8 +9,11 @@ import android.app.NotificationManager
 import android.annotation.SuppressLint
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,12 +31,15 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -49,6 +55,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -64,6 +71,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardColors
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -81,6 +90,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -96,15 +108,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -227,21 +243,14 @@ fun EchobellApp(
         },
         floatingActionButton = {
             when (currentRoute) {
-                Routes.Records -> FloatingActionButton(
-                    onClick = { navController.navigateTopLevel(Routes.Channels) },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ) {
-                    Icon(Icons.Default.Notifications, contentDescription = "Channels")
-                }
                 Routes.Channels -> FloatingActionButton(
                     onClick = {
-                        if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.ChannelNew) else navController.navigate(Routes.Paywall)
+                        if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.subscribe()) else navController.navigate(Routes.Paywall)
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "New channel")
+                    Icon(Icons.Default.Link, contentDescription = "Subscribe channel")
                 }
             }
         },
@@ -330,84 +339,165 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        LazyColumn(
+        val focusManager = LocalFocusManager.current
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
-        ) {
-            item {
-                Spacer(Modifier.height(28.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_echobell_mark),
-                            contentDescription = null,
-                            modifier = Modifier.size(38.dp),
-                            tint = MaterialTheme.colorScheme.primary,
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                            MaterialTheme.colorScheme.background
                         )
-                    }
-                    Column {
-                        Text("Echobell", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                        Text("Webhook alerts, direct keys, and call notifications.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    focusManager.clearFocus()
+                }
+                .imePadding()
+                .navigationBarsPadding(),
+            contentAlignment = Alignment.Center
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                item {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_echobell_mark),
+                                contentDescription = null,
+                                modifier = Modifier.size(46.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            "Echobell",
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Webhook alerts, direct keys, and call notifications.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
-            }
-            item {
-                AppCard {
-                    if (!codeSent) {
-                        Text("Continue with Email", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.height(12.dp))
-                        AppTextField(
-                            value = email,
-                            onValueChange = { email = it },
-                            label = "Email address",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
+                item {
+                    AppCard(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
                         )
-                        Spacer(Modifier.height(14.dp))
-                        Button(
-                            onClick = { viewModel.sendVerificationCode(email) { codeSent = true } },
-                            enabled = emailValid && !state.busy,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Icon(Icons.Default.Email, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Send Code")
-                        }
-                    } else {
-                        Text("Enter Verification Code", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                        Text("A 6-digit code was sent to $email.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(Modifier.height(12.dp))
-                        AppTextField(
-                            value = code,
-                            onValueChange = { code = it.filter(Char::isDigit).take(6) },
-                            label = "Verification code",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Spacer(Modifier.height(14.dp))
-                        Button(
-                            onClick = { viewModel.signIn(email, code) },
-                            enabled = code.length == 6 && !state.busy,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Icon(Icons.Default.Check, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Sign In")
-                        }
-                        TextButton(onClick = { codeSent = false; code = "" }) {
-                            Text("Use another email")
+                    ) {
+                        if (!codeSent) {
+                            Text("Continue with Email", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(16.dp))
+                            AppTextField(
+                                value = email,
+                                onValueChange = { email = it },
+                                label = "Email address",
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Email,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        if (emailValid && !state.busy) {
+                                            focusManager.clearFocus()
+                                            viewModel.sendVerificationCode(email) { codeSent = true }
+                                        }
+                                    }
+                                ),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                isError = email.isNotEmpty() && !emailValid
+                            )
+                            if (email.isNotEmpty() && !emailValid) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    "Please enter a valid email address",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    viewModel.sendVerificationCode(email) { codeSent = true }
+                                },
+                                enabled = emailValid && !state.busy,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Email, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Send Code")
+                            }
+                        } else {
+                            Text("Enter Verification Code", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(4.dp))
+                            Text("A 6-digit code was sent to $email.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(16.dp))
+                            AppTextField(
+                                value = code,
+                                onValueChange = { code = it.filter(Char::isDigit).take(6) },
+                                label = "Verification code",
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        if (code.length == 6 && !state.busy) {
+                                            focusManager.clearFocus()
+                                            viewModel.signIn(email, code)
+                                        }
+                                    }
+                                ),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                isError = code.isNotEmpty() && code.length < 6
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    viewModel.signIn(email, code)
+                                },
+                                enabled = code.length == 6 && !state.busy,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Sign In")
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            TextButton(
+                                onClick = { codeSent = false; code = "" },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Use another email")
+                            }
                         }
                     }
                 }
@@ -464,17 +554,55 @@ private fun RecordsScreen(
     navController: NavHostController,
     requestNotificationPermission: () -> Unit,
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    var showClearConfirm by remember { mutableStateOf(false) }
+
     ScreenScaffold(
         title = "Echobell",
         actions = {
             IconButton(onClick = { navController.navigate(Routes.Announcements) }) {
                 Icon(Icons.Default.Campaign, contentDescription = "Announcements")
             }
-            IconButton(onClick = { navController.navigateTopLevel(Routes.Settings) }) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings")
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Inbox actions")
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Mark All as Read") },
+                        onClick = {
+                            menuExpanded = false
+                            viewModel.markAllRecordsRead()
+                        },
+                        leadingIcon = { Icon(Icons.Default.Check, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Clear All", color = MaterialTheme.colorScheme.error) },
+                        onClick = {
+                            menuExpanded = false
+                            showClearConfirm = true
+                        },
+                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                    )
+                }
             }
         },
     ) { padding ->
+        if (showClearConfirm) {
+            ConfirmDialog(
+                title = "Clear All Notifications",
+                text = "This will delete all notification records from this device. This action cannot be undone.",
+                confirm = "Clear All",
+                onDismiss = { showClearConfirm = false },
+                onConfirm = {
+                    showClearConfirm = false
+                    viewModel.deleteAllRecords()
+                }
+            )
+        }
         val grouped = state.records
             .sortedByDescending { it.createdAt }
             .groupBy { dayKey(it.createdAt) }
@@ -512,12 +640,74 @@ private fun RecordsScreen(
                     Text(day, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 }
                 items(records, key = { it.id }) { record ->
-                    RecordCard(
-                        record = record,
-                        channel = state.channels.firstOrNull { it.remoteId == record.channelId },
-                        onChannelClick = { channel -> navController.navigate(Routes.channel(channel.remoteId)) },
-                        onToggleRead = { viewModel.markRecord(record.id, !record.checked) },
-                        onDelete = { viewModel.deleteRecord(record.id) },
+                    val currentOnToggleRead by rememberUpdatedState { viewModel.markRecord(record.id, !record.checked) }
+                    val currentOnDelete by rememberUpdatedState { viewModel.deleteRecord(record.id) }
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { dismissValue ->
+                            when (dismissValue) {
+                                SwipeToDismissBoxValue.EndToStart -> {
+                                    currentOnDelete()
+                                    true
+                                }
+                                SwipeToDismissBoxValue.StartToEnd -> {
+                                    currentOnToggleRead()
+                                    false
+                                }
+                                SwipeToDismissBoxValue.Settled -> false
+                            }
+                        }
+                    )
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        backgroundContent = {
+                            val direction = dismissState.dismissDirection
+                            val color = when (direction) {
+                                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer
+                                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                                else -> Color.Transparent
+                            }
+                            val alignment = when (direction) {
+                                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                                else -> Alignment.Center
+                            }
+                            val icon = when (direction) {
+                                SwipeToDismissBoxValue.StartToEnd -> if (record.checked) Icons.Default.VisibilityOff else Icons.Default.Visibility
+                                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                                else -> null
+                            }
+                            val iconColor = when (direction) {
+                                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.onPrimaryContainer
+                                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.onErrorContainer
+                                else -> Color.Transparent
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(color)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = alignment
+                            ) {
+                                if (icon != null) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        tint = iconColor,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        },
+                        content = {
+                            RecordCard(
+                                record = record,
+                                channel = state.channels.firstOrNull { it.remoteId == record.channelId },
+                                onChannelClick = { channel -> navController.navigate(Routes.channel(channel.remoteId)) },
+                                onToggleRead = { viewModel.markRecord(record.id, !record.checked) },
+                                onDelete = { viewModel.deleteRecord(record.id) },
+                            )
+                        }
                     )
                 }
             }
@@ -553,7 +743,18 @@ private fun RecordCard(
                 modifier = Modifier.weight(1f),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
+            if (!record.checked) {
+                Box(
+                    Modifier
+                        .padding(horizontal = 4.dp)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                )
+            }
             Text(formatTime(record.createdAt), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
         }
         Spacer(Modifier.height(8.dp))
@@ -616,9 +817,9 @@ private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navC
                 Icon(Icons.Default.Refresh, contentDescription = "Sync")
             }
             IconButton(onClick = {
-                if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.subscribe()) else navController.navigate(Routes.Paywall)
+                if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.ChannelNew) else navController.navigate(Routes.Paywall)
             }) {
-                Icon(Icons.Default.Link, contentDescription = "Subscribe")
+                Icon(Icons.Default.Add, contentDescription = "New channel")
             }
         },
     ) { padding ->
@@ -961,40 +1162,48 @@ private fun ChannelFormScreen(
     var autoSubscribe by rememberSaveable { mutableStateOf(channel == null) }
     var notificationType by rememberSaveable { mutableStateOf(NotificationType.Active) }
     val valid = name.isNotBlank() && bodyTemplate.isNotBlank()
+    val focusManager = LocalFocusManager.current
+    var hasAttemptedSave by rememberSaveable { mutableStateOf(false) }
 
     ScreenScaffold(
         title = if (channel == null) "New Channel" else "Edit Channel",
         navigationIcon = { BackOrEmpty(navController) },
         actions = {
             IconButton(
-                enabled = valid,
                 onClick = {
-                    if (channel == null) {
-                        viewModel.createChannel(
-                            name = name,
-                            colorHex = colorHex,
-                            titleTemplate = titleTemplate,
-                            bodyTemplate = bodyTemplate,
-                            conditions = conditions,
-                            externalLinkTemplate = externalLinkTemplate,
-                            note = note,
-                            notificationType = if (autoSubscribe) notificationType else null,
-                        ) { navController.popBackStack() }
-                    } else {
-                        viewModel.updateChannel(
-                            channelId = channel.remoteId,
-                            name = name,
-                            colorHex = colorHex,
-                            titleTemplate = titleTemplate,
-                            bodyTemplate = bodyTemplate,
-                            conditions = conditions,
-                            externalLinkTemplate = externalLinkTemplate,
-                            note = note,
-                        ) { navController.popBackStack() }
+                    hasAttemptedSave = true
+                    if (valid) {
+                        if (channel == null) {
+                            viewModel.createChannel(
+                                name = name,
+                                colorHex = colorHex,
+                                titleTemplate = titleTemplate,
+                                bodyTemplate = bodyTemplate,
+                                conditions = conditions,
+                                externalLinkTemplate = externalLinkTemplate,
+                                note = note,
+                                notificationType = if (autoSubscribe) notificationType else null,
+                            ) { navController.popBackStack() }
+                        } else {
+                            viewModel.updateChannel(
+                                channelId = channel.remoteId,
+                                name = name,
+                                colorHex = colorHex,
+                                titleTemplate = titleTemplate,
+                                bodyTemplate = bodyTemplate,
+                                conditions = conditions,
+                                externalLinkTemplate = externalLinkTemplate,
+                                note = note,
+                            ) { navController.popBackStack() }
+                        }
                     }
                 },
             ) {
-                Icon(Icons.Default.Check, contentDescription = "Save")
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = "Save",
+                    tint = if (valid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                )
             }
         },
     ) { padding ->
@@ -1005,7 +1214,20 @@ private fun ChannelFormScreen(
         ) {
             item {
                 AppCard {
-                    AppTextField(value = name, onValueChange = { name = it }, label = "Channel name", modifier = Modifier.fillMaxWidth())
+                    AppTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = "Channel name *",
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                        isError = hasAttemptedSave && name.isBlank(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (hasAttemptedSave && name.isBlank()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("Channel name is required", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
                     Spacer(Modifier.height(12.dp))
                     Text("Color", style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1032,26 +1254,58 @@ private fun ChannelFormScreen(
                         onValueChange = { titleTemplate = it },
                         label = "Title template",
                         placeholder = "Defaults to channel name",
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(12.dp))
                     AppTextField(
                         value = bodyTemplate,
                         onValueChange = { bodyTemplate = it },
-                        label = "Body template",
+                        label = "Body template *",
                         minLines = 3,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                        isError = hasAttemptedSave && bodyTemplate.isBlank(),
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    if (hasAttemptedSave && bodyTemplate.isBlank()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("Body template is required", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
             item {
                 SectionTitle("Advanced Settings")
                 AppCard {
-                    AppTextField(value = conditions, onValueChange = { conditions = it }, label = "Conditions", modifier = Modifier.fillMaxWidth())
+                    AppTextField(
+                        value = conditions,
+                        onValueChange = { conditions = it },
+                        label = "Conditions",
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Spacer(Modifier.height(12.dp))
-                    AppTextField(value = externalLinkTemplate, onValueChange = { externalLinkTemplate = it }, label = "Link template", modifier = Modifier.fillMaxWidth())
+                    AppTextField(
+                        value = externalLinkTemplate,
+                        onValueChange = { externalLinkTemplate = it },
+                        label = "Link template",
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Spacer(Modifier.height(12.dp))
-                    AppTextField(value = note, onValueChange = { note = it }, label = "Note", minLines = 2, modifier = Modifier.fillMaxWidth())
+                    AppTextField(
+                        value = note,
+                        onValueChange = { note = it },
+                        label = "Note",
+                        minLines = 2,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
             if (channel == null) {
@@ -1114,11 +1368,38 @@ private fun SubscribeScreen(
                     if (channelInfo == null) {
                         Text("Enter a subscription link or token.", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
-                        AppTextField(value = input, onValueChange = { input = it; channelInfo = null }, label = "Subscription link", modifier = Modifier.fillMaxWidth())
+                        val isInvalidToken = remember(input, token) { input.isNotEmpty() && token == null }
+                        AppTextField(
+                            value = input,
+                            onValueChange = { input = it; channelInfo = null },
+                            label = "Subscription link",
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(
+                                onSearch = {
+                                    token?.let { viewModel.fetchChannelBySubscriptionToken(it) { channelInfo = it } }
+                                }
+                            ),
+                            isError = isInvalidToken,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (isInvalidToken) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "Please enter a valid subscription token or link",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                         Spacer(Modifier.height(12.dp))
-                        Button(onClick = {
-                            token?.let { viewModel.fetchChannelBySubscriptionToken(it) { channelInfo = it } }
-                        }, enabled = token != null, modifier = Modifier.fillMaxWidth()) {
+                        Button(
+                            onClick = {
+                                token?.let { viewModel.fetchChannelBySubscriptionToken(it) { channelInfo = it } }
+                            },
+                            enabled = token != null,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
                             Text("Get Information")
                         }
                     } else {
@@ -1240,7 +1521,23 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
             onDismissRequest = { newKeyDialog = false },
             title = { Text("New Direct Key") },
             text = {
-                AppTextField(value = keyName, onValueChange = { keyName = it }, label = "Key name", modifier = Modifier.fillMaxWidth())
+                AppTextField(
+                    value = keyName,
+                    onValueChange = { keyName = it },
+                    label = "Key name",
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(
+                        onSend = {
+                            if (keyName.isNotBlank()) {
+                                viewModel.createDirectKey(keyName)
+                                keyName = ""
+                                newKeyDialog = false
+                            }
+                        }
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
             },
             confirmButton = {
                 TextButton(
@@ -2083,8 +2380,10 @@ private fun AppTextField(
     modifier: Modifier = Modifier,
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
     minLines: Int = 1,
+    isError: Boolean = false,
 ) {
     TextField(
         value = value,
@@ -2092,9 +2391,11 @@ private fun AppTextField(
         label = { Text(label) },
         placeholder = placeholder?.let { hint -> { Text(hint) } },
         keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         singleLine = singleLine,
         minLines = if (singleLine) 1 else minLines,
-        shape = RoundedCornerShape(8.dp),
+        isError = isError,
+        shape = RoundedCornerShape(12.dp),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.44f),
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
@@ -2117,7 +2418,7 @@ private fun AppCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = colors,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
