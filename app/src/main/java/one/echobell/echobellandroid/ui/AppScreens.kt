@@ -9,6 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -112,7 +113,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -202,6 +202,7 @@ fun EchobellApp(
     pendingSubscribeToken: String?,
     onSubscribeTokenConsumed: (String) -> Unit,
     requestNotificationPermission: () -> Unit,
+    requestFullScreenIntentPermission: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(state.messages) {
@@ -261,7 +262,13 @@ fun EchobellApp(
             if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             NavHost(navController = navController, startDestination = Routes.Records) {
                 composable(Routes.Records) {
-                    RecordsScreen(state, viewModel, navController, requestNotificationPermission)
+                    RecordsScreen(
+                        state,
+                        viewModel,
+                        navController,
+                        requestNotificationPermission,
+                        requestFullScreenIntentPermission,
+                    )
                 }
                 composable(Routes.Channels) {
                     ChannelsScreen(state, viewModel, navController)
@@ -304,7 +311,13 @@ fun EchobellApp(
                     DirectKeysScreen(state, viewModel, navController)
                 }
                 composable(Routes.Settings) {
-                    SettingsScreen(state, viewModel, navController, requestNotificationPermission)
+                    SettingsScreen(
+                        state,
+                        viewModel,
+                        navController,
+                        requestNotificationPermission,
+                        requestFullScreenIntentPermission,
+                    )
                 }
                 composable(Routes.User) {
                     UserSettingsScreen(state, viewModel, navController)
@@ -346,14 +359,6 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
-                            MaterialTheme.colorScheme.background
-                        )
-                    )
-                )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
@@ -373,20 +378,12 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
             ) {
                 item {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_echobell_mark),
-                                contentDescription = null,
-                                modifier = Modifier.size(46.dp),
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(R.drawable.ic_echobell_mark),
+                            contentDescription = null,
+                            modifier = Modifier.size(80.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                         Spacer(Modifier.height(16.dp))
                         Text(
                             "Echobell",
@@ -396,7 +393,7 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Webhook alerts, direct keys, and call notifications.",
+                            "Instant Alerts for Critical Events.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium
@@ -404,13 +401,11 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                     }
                 }
                 item {
-                    AppCard(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                        )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         if (!codeSent) {
-                            Text("Continue with Email", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                            AuthFormLabel("Continue with Email")
                             Spacer(Modifier.height(16.dp))
                             AppTextField(
                                 value = email,
@@ -455,7 +450,7 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                                 Text("Send Code")
                             }
                         } else {
-                            Text("Enter Verification Code", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                            AuthFormLabel("Enter Verification Code")
                             Spacer(Modifier.height(4.dp))
                             Text("A 6-digit code was sent to $email.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.height(16.dp))
@@ -509,6 +504,16 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
 }
 
 @Composable
+private fun AuthFormLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
 private fun BottomNav(navController: NavHostController) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     NavigationBar(
@@ -555,6 +560,7 @@ private fun RecordsScreen(
     viewModel: EchobellViewModel,
     navController: NavHostController,
     requestNotificationPermission: () -> Unit,
+    requestFullScreenIntentPermission: () -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     var showClearConfirm by remember { mutableStateOf(false) }
@@ -626,6 +632,10 @@ private fun RecordsScreen(
             if (!state.notificationAuthorized) {
                 item {
                     PermissionBanner(requestNotificationPermission)
+                }
+            } else if (!state.fullScreenIntentAuthorized) {
+                item {
+                    FullScreenIntentBanner(requestFullScreenIntentPermission)
                 }
             }
             if (state.records.isEmpty()) {
@@ -1290,6 +1300,7 @@ private fun ChannelFormScreen(
                 onClick = {
                     hasAttemptedSave = true
                     if (valid) {
+                        focusManager.clearFocus()
                         if (channel == null) {
                             viewModel.createChannel(
                                 name = name,
@@ -1325,12 +1336,23 @@ private fun ChannelFormScreen(
         },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = padding.plus(PaddingValues(16.dp)),
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) {
+                    focusManager.clearFocus()
+                }
+                .imePadding(),
+            contentPadding = padding.plus(PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 40.dp)),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                AppCard {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     AppTextField(
                         value = name,
                         onValueChange = { name = it },
@@ -1342,22 +1364,26 @@ private fun ChannelFormScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     if (hasAttemptedSave && name.isBlank()) {
-                        Spacer(Modifier.height(4.dp))
                         Text("Channel name is required", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
-                    Spacer(Modifier.height(12.dp))
-                    Text("Color", style = MaterialTheme.typography.labelLarge)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DEFAULT_COLORS.forEach { color ->
-                            Box(
-                                Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(parseColor(color))
-                                    .clickable { colorHex = color },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                if (colorHex == color) Icon(Icons.Default.Check, contentDescription = null, tint = Color.White)
+                }
+            }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Color")
+                    AppCard {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            DEFAULT_COLORS.forEach { color ->
+                                Box(
+                                    Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(parseColor(color))
+                                        .clickable { colorHex = color },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (colorHex == color) Icon(Icons.Default.Check, contentDescription = null, tint = Color.White)
+                                }
                             }
                         }
                     }
@@ -1366,7 +1392,10 @@ private fun ChannelFormScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionTitle("Notification Templates")
-                    AppCard {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
                         AppTextField(
                             value = titleTemplate,
                             onValueChange = { titleTemplate = it },
@@ -1377,7 +1406,6 @@ private fun ChannelFormScreen(
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        Spacer(Modifier.height(12.dp))
                         AppTextField(
                             value = bodyTemplate,
                             onValueChange = { bodyTemplate = it },
@@ -1389,7 +1417,6 @@ private fun ChannelFormScreen(
                             modifier = Modifier.fillMaxWidth(),
                         )
                         if (hasAttemptedSave && bodyTemplate.isBlank()) {
-                            Spacer(Modifier.height(4.dp))
                             Text("Body template is required", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -1398,7 +1425,10 @@ private fun ChannelFormScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionTitle("Advanced Settings")
-                    AppCard {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
                         AppTextField(
                             value = conditions,
                             onValueChange = { conditions = it },
@@ -1407,7 +1437,6 @@ private fun ChannelFormScreen(
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(Modifier.height(12.dp))
                         AppTextField(
                             value = externalLinkTemplate,
                             onValueChange = { externalLinkTemplate = it },
@@ -1416,7 +1445,6 @@ private fun ChannelFormScreen(
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(Modifier.height(12.dp))
                         AppTextField(
                             value = note,
                             onValueChange = { note = it },
@@ -1825,6 +1853,7 @@ private fun SettingsScreen(
     viewModel: EchobellViewModel,
     navController: NavHostController,
     requestNotificationPermission: () -> Unit,
+    requestFullScreenIntentPermission: () -> Unit,
 ) {
     val context = LocalContext.current
     ScreenScaffold(
@@ -1843,6 +1872,8 @@ private fun SettingsScreen(
             item { SubscriptionBanner(state, navController) }
             if (!state.notificationAuthorized) {
                 item { PermissionBanner(requestNotificationPermission) }
+            } else if (!state.fullScreenIntentAuthorized) {
+                item { FullScreenIntentBanner(requestFullScreenIntentPermission) }
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2405,19 +2436,25 @@ private fun AnnouncementsScreen(state: AppUiState, viewModel: EchobellViewModel,
 
 @Composable
 private fun AnnouncementRow(announcement: Announcement, read: Boolean, onClick: () -> Unit) {
+    val levelColors = announcement.level.colors(read = read)
     AppCard(Modifier.clickable(onClick = onClick)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier
                     .size(10.dp)
                     .clip(CircleShape)
-                    .background(if (read) MaterialTheme.colorScheme.outline else announcement.level.color()),
+                    .background(levelColors.accent),
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(announcement.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = if (read) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
+                Text(
+                    announcement.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (read) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(announcement.level.label(), style = MaterialTheme.typography.labelSmall, color = announcement.level.color())
+                    Text(announcement.level.label(), style = MaterialTheme.typography.labelSmall, color = levelColors.accent)
                     Text(formatDate(announcement.updatedAt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -2442,8 +2479,13 @@ private fun AnnouncementDetailScreen(announcement: Announcement, viewModel: Echo
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
+                val levelColors = announcement.level.colors()
                 AppCard {
-                    Text(announcement.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text(
+                        announcement.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         AssistChip(
@@ -2451,8 +2493,8 @@ private fun AnnouncementDetailScreen(announcement: Announcement, viewModel: Echo
                             label = { Text(announcement.level.label()) },
                             border = null,
                             colors = AssistChipDefaults.assistChipColors(
-                                containerColor = announcement.level.color().copy(alpha = 0.15f),
-                                labelColor = announcement.level.color()
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                labelColor = levelColors.accent
                             )
                         )
                         AssistChip(
@@ -2637,9 +2679,10 @@ private fun AppTextField(
         isError = isError,
         shape = RoundedCornerShape(12.dp),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.44f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f),
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            disabledContainerColor = MaterialTheme.colorScheme.surface,
+            errorContainerColor = MaterialTheme.colorScheme.surface,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
@@ -2736,6 +2779,36 @@ private fun PermissionBanner(requestNotificationPermission: () -> Unit) {
             )
         ) {
             Text("Allow Notifications")
+        }
+    }
+}
+
+@Composable
+private fun FullScreenIntentBanner(requestFullScreenIntentPermission: () -> Unit) {
+    AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+        Row(verticalAlignment = Alignment.Top) {
+            Icon(
+                Icons.Default.Phone,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Full-screen alerts disabled", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                Text("Allow urgent call notifications to appear over the lock screen.", color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Button(
+            onClick = requestFullScreenIntentPermission,
+            modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
+            )
+        ) {
+            Text("Enable Full-screen Alerts")
         }
     }
 }
@@ -2841,13 +2914,26 @@ private fun ConfirmDialog(
 
 @Composable
 private fun AnnouncementPreview(announcement: Announcement, onClick: () -> Unit) {
-    AppCard(Modifier.clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+    val levelColors = announcement.level.colors()
+    AppCard(
+        Modifier.clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = levelColors.container,
+            contentColor = levelColors.content,
+        ),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Campaign, contentDescription = null)
+            Icon(Icons.Default.Campaign, contentDescription = null, tint = levelColors.accent)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(announcement.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("Tap to view details", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    announcement.title,
+                    fontWeight = FontWeight.SemiBold,
+                    color = levelColors.content,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text("Tap to view details", style = MaterialTheme.typography.bodySmall, color = levelColors.mutedContent)
             }
         }
     }
@@ -2884,11 +2970,73 @@ private fun AnnouncementLevel.label(): String = when (this) {
     AnnouncementLevel.Unknown -> "Info"
 }
 
+private data class AnnouncementLevelColors(
+    val container: Color,
+    val content: Color,
+    val mutedContent: Color,
+    val accent: Color,
+)
+
 @Composable
-private fun AnnouncementLevel.color(): Color = when (this) {
-    AnnouncementLevel.Info, AnnouncementLevel.Unknown -> MaterialTheme.colorScheme.primary
-    AnnouncementLevel.Warning -> MaterialTheme.colorScheme.tertiary
-    AnnouncementLevel.Critical -> MaterialTheme.colorScheme.error
+private fun AnnouncementLevel.colors(read: Boolean = false): AnnouncementLevelColors {
+    val dark = isSystemInDarkTheme()
+    val colors = when (this) {
+        AnnouncementLevel.Info,
+        AnnouncementLevel.Unknown -> if (dark) {
+            AnnouncementLevelColors(
+                container = Color(0xFF16375F),
+                content = Color(0xFFEAF2FF),
+                mutedContent = Color(0xFFC4D8F7),
+                accent = Color(0xFF93C5FD),
+            )
+        } else {
+            AnnouncementLevelColors(
+                container = Color(0xFFD7E8FF),
+                content = Color(0xFF0F2A4D),
+                mutedContent = Color(0xFF315A88),
+                accent = Color(0xFF1D4ED8),
+            )
+        }
+        AnnouncementLevel.Warning -> if (dark) {
+            AnnouncementLevelColors(
+                container = Color(0xFF4A2F09),
+                content = Color(0xFFFFF0D1),
+                mutedContent = Color(0xFFFFD991),
+                accent = Color(0xFFFBBF24),
+            )
+        } else {
+            AnnouncementLevelColors(
+                container = Color(0xFFFFDF9A),
+                content = Color(0xFF3B2500),
+                mutedContent = Color(0xFF6D4A10),
+                accent = Color(0xFFB45309),
+            )
+        }
+        AnnouncementLevel.Critical -> if (dark) {
+            AnnouncementLevelColors(
+                container = Color(0xFF4D1717),
+                content = Color(0xFFFFE7E7),
+                mutedContent = Color(0xFFFFC5C5),
+                accent = Color(0xFFFCA5A5),
+            )
+        } else {
+            AnnouncementLevelColors(
+                container = Color(0xFFFFCACA),
+                content = Color(0xFF450A0A),
+                mutedContent = Color(0xFF7F1D1D),
+                accent = Color(0xFFB91C1C),
+            )
+        }
+    }
+
+    if (!read) return colors
+
+    return colors.copy(
+        container = colors.container.copy(alpha = if (dark) 0.58f else 0.68f),
+        content = colors.content.copy(alpha = 0.78f),
+        mutedContent = colors.mutedContent.copy(alpha = 0.76f),
+        accent = colors.accent.copy(alpha = if (dark) 0.72f else 0.68f),
+    )
 }
 
 private fun dayKey(epoch: Long): String =

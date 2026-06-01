@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
@@ -26,6 +27,7 @@ import one.echobell.echobellandroid.data.NotificationType
 import one.echobell.echobellandroid.data.Record
 
 object NotificationHelper {
+    private const val TAG = "NotificationHelper"
     private const val CHANNEL_ID = "echobell_notifications"
     private const val CALL_CHANNEL_ID = "echobell_calls"
     private const val CALL_TIMEOUT_MS = 60_000L
@@ -155,6 +157,7 @@ object NotificationHelper {
             .setOngoing(true)
             .setAutoCancel(false)
             .setTimeoutAfter(CALL_TIMEOUT_MS)
+            .setFullScreenIntent(showPendingIntent, true)
             .setContentIntent(showPendingIntent)
             .setStyle(NotificationCompat.CallStyle.forIncomingCall(caller, dismissPendingIntent, answerPendingIntent))
 
@@ -172,6 +175,8 @@ object NotificationHelper {
         if (!canPostNotifications(context)) return
         runCatching {
             NotificationManagerCompat.from(context).notify(notificationId, notification)
+        }.onFailure { error ->
+            Log.w(TAG, "Failed to post notification", error)
         }
     }
 }

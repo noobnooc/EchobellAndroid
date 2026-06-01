@@ -7,6 +7,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 private val Context.echobellDataStore by preferencesDataStore(name = "echobell")
 
@@ -71,6 +73,13 @@ class LocalStore(
     suspend fun saveDirectKeys(directKeys: List<DirectKey>) = saveJson(Keys.DirectKeys, directKeys)
 
     suspend fun saveRecords(records: List<Record>) = saveJson(Keys.Records, records.sortedByDescending { it.createdAt }.take(500))
+
+    fun recordsFlow(): Flow<List<Record>> =
+        dataStore.data.map { preferences ->
+            preferences[Keys.Records]
+                .decodeList(Record::class.java)
+                .sortedByDescending { it.createdAt }
+        }
 
     suspend fun saveAnnouncements(announcements: List<Announcement>) = saveJson(Keys.Announcements, announcements)
 

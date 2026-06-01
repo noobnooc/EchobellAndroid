@@ -2,6 +2,7 @@ package one.echobell.echobellandroid.data
 
 import android.Manifest
 import android.app.Application
+import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
@@ -29,6 +30,7 @@ data class AppUiState(
     val announcements: List<Announcement> = emptyList(),
     val readAnnouncementIds: Set<Int> = emptySet(),
     val notificationAuthorized: Boolean = false,
+    val fullScreenIntentAuthorized: Boolean = true,
     val messages: List<UiMessage> = emptyList(),
 ) {
     val authenticated: Boolean get() = deviceToken != null
@@ -48,6 +50,11 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
     init {
         NotificationHelper.ensureChannel(appContext)
         viewModelScope.launch {
+            store.recordsFlow().collect { records ->
+                _state.update { it.copy(records = records) }
+            }
+        }
+        viewModelScope.launch {
             val saved = store.load()
             _state.value = AppUiState(
                 initialized = true,
@@ -61,6 +68,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
                 announcements = saved.announcements.sortedByDescending { it.startsAt },
                 readAnnouncementIds = saved.readAnnouncementIds,
                 notificationAuthorized = isNotificationAuthorized(),
+                fullScreenIntentAuthorized = canUseFullScreenIntent(),
             )
 
             val notificationToken = refreshFirebaseTokenInternal()
@@ -424,8 +432,21 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun syncNotificationPermission() {
-        _state.update { it.copy(notificationAuthorized = isNotificationAuthorized()) }
+        syncPermissionStates()
         refreshFirebaseToken()
+    }
+
+    fun syncFullScreenIntentPermission() {
+        _state.update { it.copy(fullScreenIntentAuthorized = canUseFullScreenIntent()) }
+    }
+
+    fun syncPermissionStates() {
+        _state.update {
+            it.copy(
+                notificationAuthorized = isNotificationAuthorized(),
+                fullScreenIntentAuthorized = canUseFullScreenIntent(),
+            )
+        }
     }
 
     fun consumeMessage(id: Long) {
@@ -551,6 +572,10 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
     private fun isNotificationAuthorized(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             ContextCompat.checkSelfPermission(appContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+    private fun canUseFullScreenIntent(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE ||
+            appContext.getSystemService(NotificationManager::class.java).canUseFullScreenIntent()
 
     private fun levelPriority(level: AnnouncementLevel): Int = when (level) {
         AnnouncementLevel.Critical -> 3
