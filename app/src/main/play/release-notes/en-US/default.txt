@@ -1,1 +1,0 @@
-Refined Echobell's Android release polish, improved subscription restore handling, and removed obsolete full-screen intent settings for Play policy compatibility.

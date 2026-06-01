@@ -82,6 +82,5 @@ Before uploading a release bundle, run:
 ```
 
 `checkPublishRelease` includes release signing, release lint, release bundle generation, and the local Play Billing catalog check.
-It also checks the local Google Play listing assets for required icon, feature graphic, screenshot, and text limits.
+It also checks the local Google Play listing assets for required icon, feature graphic, and text limits.
 Asset alt text is tracked in `asset-alt-text.properties`; use those values when uploading graphics in Play Console.
-Release notes are tracked in `release-notes/en-US/default.txt`; paste them into the Play Console release notes field for this release.

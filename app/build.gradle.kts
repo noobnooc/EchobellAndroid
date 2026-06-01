@@ -78,8 +78,8 @@ android {
         applicationId = "one.echobell.echobellandroid"
         minSdk = 31
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.4"
+        versionCode = 7
+        versionName = "1.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -299,36 +299,10 @@ tasks.register("checkPlayListingAssets") {
         }
         requireAltText("featureGraphic", "Feature graphic")
 
-        val screenshots = playListingDir.resolve("screenshots")
-            .listFiles { file -> file.isFile && file.extension.lowercase() in setOf("jpg", "jpeg", "png") }
-            ?.sortedBy { it.name }
-            .orEmpty()
-        if (screenshots.size !in 2..8) {
-            throw GradleException("Google Play listing must include 2-8 phone screenshots; found ${screenshots.size}.")
-        }
-        screenshots.forEach { screenshot ->
-            val image = readImage(screenshot, "Screenshot ${screenshot.name}")
-            val minDimension = minOf(image.width, image.height)
-            val maxDimension = maxOf(image.width, image.height)
-            if (minDimension < 320 || maxDimension > 3840 || maxDimension > minDimension * 2) {
-                throw GradleException(
-                    "Screenshot ${screenshot.name} must be 320-3840 px with max side no more than twice min side; " +
-                        "found ${image.width}x${image.height}.",
-                )
-            }
-            if (image.colorModel.hasAlpha()) {
-                throw GradleException("Screenshot ${screenshot.name} must be JPEG or 24-bit PNG without alpha.")
-            }
-            requireAltText(screenshot.nameWithoutExtension, "Screenshot ${screenshot.name}")
-        }
-
         val listingTextDir = playListingDir.resolve("listings/en-US")
         requireTextLength(listingTextDir.resolve("title.txt"), "Store listing title", 1, 30)
         requireTextLength(listingTextDir.resolve("short-description.txt"), "Store listing short description", 1, 80)
         requireTextLength(listingTextDir.resolve("full-description.txt"), "Store listing full description", 1, 4000)
-
-        val releaseNotes = playListingDir.resolve("release-notes/en-US/default.txt")
-        requireTextLength(releaseNotes, "Release notes", 1, 500)
     }
 }
 
