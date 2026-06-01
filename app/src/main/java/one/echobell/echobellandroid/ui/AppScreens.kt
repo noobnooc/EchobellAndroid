@@ -564,6 +564,7 @@ private fun RecordsScreen(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     var showClearConfirm by remember { mutableStateOf(false) }
+    var expandedRecordId by rememberSaveable { mutableStateOf<String?>(null) }
 
     ScreenScaffold(
         title = "Echobell",
@@ -715,9 +716,12 @@ private fun RecordsScreen(
                             RecordCard(
                                 record = record,
                                 channel = state.channels.firstOrNull { it.remoteId == record.channelId },
-                                onChannelClick = { channel -> navController.navigate(Routes.channel(channel.remoteId)) },
-                                onToggleRead = { viewModel.markRecord(record.id, !record.checked) },
-                                onDelete = { viewModel.deleteRecord(record.id) },
+                                expanded = expandedRecordId == record.id,
+                                onExpandedChange = { expanded ->
+                                    expandedRecordId = if (expanded) record.id else null
+                                },
+                                onMarkRead = { viewModel.markRecord(record.id, true) },
+                                onMarkUnread = { viewModel.markRecord(record.id, false) },
                             )
                         }
                     )
@@ -731,16 +735,25 @@ private fun RecordsScreen(
 private fun RecordCard(
     record: Record,
     channel: Channel?,
-    onChannelClick: (Channel) -> Unit,
-    onToggleRead: () -> Unit,
-    onDelete: () -> Unit,
+    expanded: Boolean? = null,
+    onExpandedChange: ((Boolean) -> Unit)? = null,
+    onMarkRead: () -> Unit,
+    onMarkUnread: () -> Unit,
 ) {
-    var expanded by rememberSaveable(record.id) { mutableStateOf(false) }
+    var localExpanded by rememberSaveable(record.id) { mutableStateOf(false) }
+    val isExpanded = expanded ?: localExpanded
+    fun setExpanded(value: Boolean) {
+        if (onExpandedChange == null) {
+            localExpanded = value
+        } else {
+            onExpandedChange(value)
+        }
+    }
     val context = LocalContext.current
     AppCard(
         modifier = Modifier.clickable {
-            expanded = !expanded
-            if (!record.checked) onToggleRead()
+            setExpanded(!isExpanded)
+            if (!record.checked) onMarkRead()
         },
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -780,39 +793,31 @@ private fun RecordCard(
             Text(
                 record.body,
                 color = if (record.checked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                maxLines = if (expanded) Int.MAX_VALUE else 3,
+                maxLines = if (isExpanded) Int.MAX_VALUE else 3,
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        if (expanded) {
+        if (isExpanded) {
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (channel != null) {
-                    TextButton(onClick = { onChannelClick(channel) }) {
-                        Icon(Icons.Default.Link, contentDescription = null)
+                record.requestLink?.takeIf { it.isNotBlank() }?.let { link ->
+                    TextButton(onClick = { context.openUrl(link) }) {
+                        Icon(Icons.Default.Info, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("Channel")
+                        Text("Source")
                     }
                 }
                 record.externalLink?.takeIf { it.isNotBlank() }?.let { link ->
                     TextButton(onClick = { context.openUrl(link) }) {
                         Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("Open")
+                        Text("External")
                     }
                 }
-                TextButton(onClick = { context.shareText("${record.title}\n\n${record.body}") }) {
-                    Icon(Icons.Default.Share, contentDescription = null)
+                TextButton(onClick = onMarkUnread, enabled = record.checked) {
+                    Icon(Icons.Default.VisibilityOff, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
-                    Text("Share")
-                }
-                TextButton(onClick = onToggleRead) {
-                    Icon(if (record.checked) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
-                    Spacer(Modifier.width(4.dp))
-                    Text(if (record.checked) "Unread" else "Read")
-                }
-                TextButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                    Text("Mark Unread")
                 }
             }
         }
@@ -1115,11 +1120,12 @@ private fun ChannelDetailScreen(
                     }
                 }
                 items(records.take(5), key = { it.id }) { record ->
-                    RecordCard(record = record, channel = channel, onChannelClick = {}, onToggleRead = {
-                        viewModel.markRecord(record.id, !record.checked)
-                    }, onDelete = {
-                        viewModel.deleteRecord(record.id)
-                    })
+                    RecordCard(
+                        record = record,
+                        channel = channel,
+                        onMarkRead = { viewModel.markRecord(record.id, true) },
+                        onMarkUnread = { viewModel.markRecord(record.id, false) },
+                    )
                 }
             }
             if (channel.isAdmin && !channel.detached) {
