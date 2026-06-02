@@ -65,6 +65,8 @@ val monthlySubscriptionProductId = playBillingCatalogValue("monthlyProductId")
 val annualSubscriptionProductId = playBillingCatalogValue("annualProductId")
 val monthlySubscriptionBasePlanId = playBillingCatalogValue("monthlyBasePlanId")
 val annualSubscriptionBasePlanId = playBillingCatalogValue("annualBasePlanId")
+val monthlySubscriptionTrialPeriod = playBillingCatalogValue("monthlyTrialPeriod")
+val annualSubscriptionTrialPeriod = playBillingCatalogValue("annualTrialPeriod")
 
 android {
     namespace = "one.echobell.echobellandroid"
@@ -88,6 +90,8 @@ android {
         buildConfigField("String", "GOOGLE_PLAY_ANNUAL_SUBSCRIPTION_ID", "\"$annualSubscriptionProductId\"")
         buildConfigField("String", "GOOGLE_PLAY_MONTHLY_BASE_PLAN_ID", "\"$monthlySubscriptionBasePlanId\"")
         buildConfigField("String", "GOOGLE_PLAY_ANNUAL_BASE_PLAN_ID", "\"$annualSubscriptionBasePlanId\"")
+        buildConfigField("String", "GOOGLE_PLAY_MONTHLY_TRIAL_PERIOD", "\"$monthlySubscriptionTrialPeriod\"")
+        buildConfigField("String", "GOOGLE_PLAY_ANNUAL_TRIAL_PERIOD", "\"$annualSubscriptionTrialPeriod\"")
     }
 
     signingConfigs {
@@ -223,11 +227,13 @@ tasks.register("checkPlayBillingCatalog") {
         val periods = mapOf(
             "monthlyBillingPeriod" to "P1M",
             "annualBillingPeriod" to "P1Y",
+            "monthlyTrialPeriod" to "P3D",
+            "annualTrialPeriod" to "P7D",
         )
         periods.forEach { (name, expected) ->
             val value = playBillingCatalogValue(name)
             if (value != expected) {
-                throw GradleException("$name must be '$expected' for the current Android paywall copy and sorting.")
+                throw GradleException("$name must be '$expected' for the current Android paywall copy, sorting, and offer selection.")
             }
         }
     }

@@ -2342,7 +2342,7 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
                                     onClick = { selectedProduct?.let { product -> activity?.let { billingManager.launchPurchase(it, product) } } },
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
-                                    Text("Subscribe")
+                                    Text(if (selectedProduct?.trialPeriod.isNullOrBlank()) "Subscribe" else "Start Free Trial")
                                 }
                                 TextButton(onClick = { billingManager.restorePurchases(userInitiated = true) }, modifier = Modifier.fillMaxWidth()) {
                                     Text("Restore Purchases")
@@ -2388,6 +2388,9 @@ private fun BillingProductRow(product: BillingProduct, selected: Boolean, onClic
             Column(Modifier.weight(1f)) {
                 Text(product.title, fontWeight = FontWeight.SemiBold)
                 Text(product.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (product.trialPeriod.isNotBlank()) {
+                    Text(product.trialPeriod, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                }
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(product.price, fontWeight = FontWeight.SemiBold)

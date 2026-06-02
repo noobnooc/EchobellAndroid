@@ -24,6 +24,10 @@ private val SUBSCRIPTION_BASE_PLAN_IDS = mapOf(
     BuildConfig.GOOGLE_PLAY_MONTHLY_SUBSCRIPTION_ID to BuildConfig.GOOGLE_PLAY_MONTHLY_BASE_PLAN_ID,
     BuildConfig.GOOGLE_PLAY_ANNUAL_SUBSCRIPTION_ID to BuildConfig.GOOGLE_PLAY_ANNUAL_BASE_PLAN_ID,
 )
+private val SUBSCRIPTION_TRIAL_PERIODS = mapOf(
+    BuildConfig.GOOGLE_PLAY_MONTHLY_SUBSCRIPTION_ID to BuildConfig.GOOGLE_PLAY_MONTHLY_TRIAL_PERIOD,
+    BuildConfig.GOOGLE_PLAY_ANNUAL_SUBSCRIPTION_ID to BuildConfig.GOOGLE_PLAY_ANNUAL_TRIAL_PERIOD,
+)
 
 data class BillingProduct(
     val productId: String,
@@ -32,8 +36,21 @@ data class BillingProduct(
     val description: String,
     val price: String,
     val period: String,
+    val trialPeriod: String,
     val offerToken: String?,
     val details: ProductDetails,
+)
+
+internal data class BillingPricingPhase(
+    val formattedPrice: String,
+    val billingPeriod: String,
+    val priceAmountMicros: Long,
+)
+
+internal data class BillingOfferCandidate(
+    val basePlanId: String,
+    val offerToken: String,
+    val pricingPhases: List<BillingPricingPhase>,
 )
 
 class GoogleBillingManager(
@@ -185,23 +202,23 @@ class GoogleBillingManager(
                 .sortedBy { SUBSCRIPTION_PRODUCT_IDS.indexOf(it.productId).takeIf { index -> index >= 0 } ?: Int.MAX_VALUE }
                 .mapNotNull { details ->
                     val expectedBasePlanId = SUBSCRIPTION_BASE_PLAN_IDS[details.productId]
+                    val expectedTrialPeriod = SUBSCRIPTION_TRIAL_PERIODS[details.productId]
                     val offer = details.subscriptionOfferDetails
-                        ?.firstOrNull { it.basePlanId == expectedBasePlanId }
+                        ?.map { it.toBillingOfferCandidate() }
+                        ?.selectBillingOffer(expectedBasePlanId, expectedTrialPeriod)
                         ?: return@mapNotNull null
-                    val paidPhase = offer
-                        ?.pricingPhases
-                        ?.pricingPhaseList
-                        ?.lastOrNull()
+                    val paidPhase = offer.paidPhase
+                    val trialPhase = offer.trialPhase
 
                     BillingProduct(
                         productId = details.productId,
                         basePlanId = offer.basePlanId,
                         title = details.name,
                         description = details.description,
-                        price = paidPhase?.formattedPrice
-                            ?: "",
+                        price = paidPhase?.formattedPrice ?: "",
                         period = paidPhase?.billingPeriod?.toDisplayPeriod().orEmpty(),
-                        offerToken = offer?.offerToken,
+                        trialPeriod = trialPhase?.billingPeriod?.toDisplayTrialPeriod().orEmpty(),
+                        offerToken = offer.offerToken,
                         details = details,
                     )
                 }
@@ -254,8 +271,45 @@ class GoogleBillingManager(
     }
 }
 
+internal fun List<BillingOfferCandidate>.selectBillingOffer(
+    expectedBasePlanId: String?,
+    expectedTrialPeriod: String?,
+): BillingOfferCandidate? {
+    val basePlanOffers = filter { it.basePlanId == expectedBasePlanId }
+    return basePlanOffers.firstOrNull { offer ->
+        expectedTrialPeriod != null && offer.trialPhase?.billingPeriod == expectedTrialPeriod
+    } ?: basePlanOffers.firstOrNull { it.trialPhase == null }
+}
+
+private val BillingOfferCandidate.paidPhase: BillingPricingPhase?
+    get() = pricingPhases.lastOrNull { it.priceAmountMicros > 0L } ?: pricingPhases.lastOrNull()
+
+private val BillingOfferCandidate.trialPhase: BillingPricingPhase?
+    get() = pricingPhases.firstOrNull { it.priceAmountMicros == 0L }
+
+private fun ProductDetails.SubscriptionOfferDetails.toBillingOfferCandidate() =
+    BillingOfferCandidate(
+        basePlanId = basePlanId,
+        offerToken = offerToken,
+        pricingPhases = pricingPhases.pricingPhaseList.map {
+            BillingPricingPhase(
+                formattedPrice = it.formattedPrice,
+                billingPeriod = it.billingPeriod,
+                priceAmountMicros = it.priceAmountMicros,
+            )
+        },
+    )
+
 private fun String.toDisplayPeriod(): String = when (this) {
     "P1M" -> "month"
     "P1Y" -> "year"
     else -> lowercase()
 }
+
+private fun String.toDisplayTrialPeriod(): String =
+    Regex("^P(\\d+)D$").matchEntire(this)
+        ?.groupValues
+        ?.get(1)
+        ?.toIntOrNull()
+        ?.let { days -> "$days ${if (days == 1) "day" else "days"} free" }
+        ?: lowercase()

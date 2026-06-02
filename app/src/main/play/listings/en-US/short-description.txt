@@ -1,1 +1,1 @@
-Webhook alerts, direct keys, and call-style notifications.
+Turn webhooks into instant alerts for incidents, deploys, trades, and more.

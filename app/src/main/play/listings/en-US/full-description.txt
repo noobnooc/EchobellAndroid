@@ -1,15 +1,28 @@
-Echobell turns webhooks and channel events into reliable Android alerts.
+Echobell turns webhooks, channel events, and automation signals into instant Android alerts.
 
-Create channels, subscribe this device, and receive records from services, scripts, automations, monitoring tools, and email triggers. Direct keys make it easy to trigger alerts without managing a full channel.
+Send a webhook, create a channel, or use a direct key to notify your phone when something needs attention. Echobell is built for developers, operators, makers, traders, and teams who need practical alerts from the systems they already use.
 
-Key features:
+Use Echobell for:
 
-- Channel and direct webhook notifications
-- Time-sensitive and call-style alert modes for urgent events
-- Custom title, body, link, condition, and note templates
-- Notification history stored on this device
-- Channel sharing and subscription controls
+- Production incidents, API errors, outages, and service maintenance
+- Server, uptime, cron, backup, and infrastructure monitoring
+- CI/CD pipelines, deploy status, build failures, and release events
+- Stock market alerts, trading signals, strategy scripts, and market automation
+- Payment, order, customer, and business workflow updates
+- Security events, access alerts, suspicious activity, and audit signals
+- Smart home sensors, personal scripts, scheduled jobs, and custom automations
+
+Why Echobell works well for critical events:
+
+- Webhook and channel-based alerts for flexible integrations
+- Direct keys for simple one-off webhook triggers
+- Standard, time-sensitive, and call-style alert modes
+- Custom notification templates for titles, bodies, links, notes, and conditions
+- Notification records stored on this device for quick review
+- External links that take you from an alert to the right dashboard, chart, runbook, or incident page
+- Channel sharing and subscription controls for team and multi-device workflows
 - Premium support for unlimited channels, direct keys, and alert modes
-- Privacy, terms, and account deletion controls in settings
 
-Echobell is built for developers, operators, and anyone who needs actionable alerts from their own systems.
+Echobell does not replace your monitoring stack, trading tools, automation platform, or incident system. It gives them a fast mobile alert layer, so the events that matter can reach the phone you actually carry.
+
+From API incidents and deploy failures to market signals, backup jobs, security alerts, and business events, Echobell helps critical events reach you quickly and stay easy to review.

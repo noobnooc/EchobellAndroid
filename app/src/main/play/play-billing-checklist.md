@@ -6,13 +6,14 @@ Use this checklist before promoting an Android release with Premium subscription
 
 The app queries the subscription products listed in `billing-products.properties`.
 
-| Plan | Product ID | Base plan ID | Billing period |
-| --- | --- | --- | --- |
-| Monthly | `echobell.subscription.monthly` | `monthly` | `P1M` |
-| Annual | `echobell.subscription.annual` | `annual` | `P1Y` |
+| Plan | Product ID | Base plan ID | Billing period | Free trial |
+| --- | --- | --- | --- | --- |
+| Monthly | `echobell.subscription.monthly` | `monthly` | `P1M` | `P3D` |
+| Annual | `echobell.subscription.annual` | `annual` | `P1Y` | `P7D` |
 
-In Play Console, create these under **Monetize with Play > Products > Subscriptions**. Each subscription must have at least one active base plan, country/region availability, and a price. Offers are optional.
-The Android client selects offers by the base plan IDs above, so changing a base plan ID in Play Console also requires updating `billing-products.properties`.
+In Play Console, create these under **Monetize with Play > Products > Subscriptions**. Each subscription must have at least one active base plan, country/region availability, and a price.
+Create an active offer on each base plan with the free trial period above. The Android client prefers the offer whose free pricing phase matches the configured trial period, and falls back to the paid base-plan offer when no eligible trial offer is returned.
+Changing a base plan ID or trial period in Play Console also requires updating `billing-products.properties`.
 
 ## Play Console Checks
 
@@ -20,6 +21,8 @@ The Android client selects offers by the base plan IDs above, so changing a base
 - The app is uploaded to an internal, closed, open, or production track before testing subscriptions. Sideloaded debug APKs can connect to Play Billing but normally cannot resolve unpublished subscription products.
 - Both subscription products are active.
 - Both base plans are active.
+- Monthly has an active `P3D` free trial offer on the `monthly` base plan.
+- Annual has an active `P7D` free trial offer on the `annual` base plan.
 - Countries/regions are enabled for each active base plan.
 - License testers or test track users are configured with the Google account used on the test device.
 - Terms and privacy URLs are available in the app and listing:
