@@ -8,6 +8,7 @@ import android.app.Activity
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -34,8 +35,12 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -50,6 +55,7 @@ import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
@@ -105,6 +111,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -129,6 +136,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
@@ -250,22 +258,8 @@ fun EchobellApp(
                 BottomNav(navController)
             }
         },
-        floatingActionButton = {
-            when (currentRoute) {
-                Routes.Channels -> FloatingActionButton(
-                    onClick = {
-                        if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.subscribe()) else navController.navigate(Routes.Paywall)
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ) {
-                    Icon(Icons.Default.Link, contentDescription = stringResource(R.string.channels_subscribe_fab))
-                }
-            }
-        },
     ) { padding ->
         Box(Modifier.padding(padding)) {
-            if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             NavHost(navController = navController, startDestination = Routes.Records) {
                 composable(Routes.Records) {
                     RecordsScreen(
@@ -345,6 +339,15 @@ fun EchobellApp(
                     if (announcement == null) MissingScreen(stringResource(R.string.announcement_not_found), navController) else AnnouncementDetailScreen(announcement, viewModel, navController)
                 }
             }
+            // Drawn after the NavHost, otherwise each screen's own opaque Scaffold
+            // background paints straight over it and the busy state never shows.
+            if (state.busy) {
+                LinearProgressIndicator(
+                    Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter),
+                )
+            }
         }
     }
 }
@@ -403,7 +406,7 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                         Text(
                             stringResource(R.string.auth_tagline),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -842,6 +845,19 @@ private fun RecordCard(
 private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navController: NavHostController) {
     val uriHandler = LocalUriHandler.current
     var showIntro by rememberSaveable { mutableStateOf(true) }
+    val listState = rememberLazyListState()
+    var previousIndex by remember { mutableStateOf(0) }
+    var previousOffset by remember { mutableStateOf(0) }
+    val fabVisible by remember {
+        derivedStateOf {
+            val index = listState.firstVisibleItemIndex
+            val offset = listState.firstVisibleItemScrollOffset
+            val scrollingUp = if (index != previousIndex) index < previousIndex else offset <= previousOffset
+            previousIndex = index
+            previousOffset = offset
+            scrollingUp
+        }
+    }
 
     ScreenScaffold(
         title = stringResource(R.string.nav_channels),
@@ -855,35 +871,45 @@ private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navC
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.channels_new))
             }
         },
+        floatingActionButton = {
+            // Hidden while the user scrolls down through the list, so it stops sitting
+            // on top of card content, and restored as soon as they scroll back up.
+            AnimatedVisibility(
+                visible = fabVisible,
+                enter = scaleIn(),
+                exit = scaleOut(),
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.subscribe()) else navController.navigate(Routes.Paywall)
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) {
+                    Icon(Icons.Default.Link, contentDescription = stringResource(R.string.channels_subscribe_fab))
+                }
+            }
+        },
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = padding.plus(PaddingValues(16.dp)),
+            // Scaffold does not reserve room for its FAB, so the last card would scroll
+            // underneath it without this extra bottom inset (56dp button + margins).
+            contentPadding = padding.plus(
+                PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 88.dp)
+            ),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             if (showIntro) {
                 item {
-                    AppCard(
-                        modifier = Modifier.clickable { uriHandler.openUri("https://echobell.one/en/docs/template") },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    ) {
-                        Row(verticalAlignment = Alignment.Top) {
-                            Icon(
-                                Icons.Default.Link,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(top = 2.dp)
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(stringResource(R.string.nav_channels), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                Text(stringResource(R.string.channels_intro_description), color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
-                            }
-                            IconButton(onClick = { showIntro = false }) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                            }
-                        }
-                    }
+                    IntroBanner(
+                        icon = Icons.Default.Link,
+                        title = stringResource(R.string.nav_channels),
+                        description = stringResource(R.string.channels_intro_description),
+                        onOpen = { uriHandler.openUri("https://echobell.one/en/docs/template") },
+                        onDismiss = { showIntro = false },
+                    )
                 }
             }
             if (state.channels.isEmpty()) {
@@ -918,9 +944,20 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
+                // Status sits beside the name rather than in the bottom-right corner:
+                // that corner is where the Scaffold parks its FAB, which covered the
+                // chip on every card the list scrolled past.
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(channel.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    Text("#${channel.remoteId}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        channel.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    StatusChip(channel)
                 }
                 Text(channel.titleTemplate, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(channel.bodyTemplate, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
@@ -930,9 +967,15 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
                         channel.lastTriggeredAt?.let { stringResource(R.string.channel_last_triggered_fmt, formatDateTime(it)) }
                             ?: stringResource(R.string.channel_never_triggered),
                         style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
                     )
-                    Spacer(Modifier.weight(1f))
-                    StatusChip(channel)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "#${channel.remoteId}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -941,37 +984,59 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
 
 @Composable
 private fun StatusChip(channel: Channel) {
+    // One brand hue carries the two states the user owns or follows; the remaining
+    // states stay neutral. Previously these four chips used orange, blue and slate
+    // containers side by side in the same list, which read as noise rather than status.
     val (label, containerColor, textColor) = when {
         channel.detached -> Triple(
             stringResource(R.string.channel_status_inactive),
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+            Color.Transparent,
             MaterialTheme.colorScheme.onSurfaceVariant
         )
         channel.isAdmin -> Triple(
             stringResource(R.string.channel_status_managed),
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer
-        )
-        channel.subscribedAt != null -> Triple(
-            stringResource(R.string.channel_status_subscribed),
             MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.onPrimaryContainer
         )
-        else -> Triple(
-            stringResource(R.string.channel_status_available),
+        channel.subscribedAt != null -> Triple(
+            stringResource(R.string.channel_status_subscribed),
             MaterialTheme.colorScheme.secondaryContainer,
             MaterialTheme.colorScheme.onSecondaryContainer
         )
-    }
-    AssistChip(
-        onClick = {},
-        label = { Text(label) },
-        border = null,
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = containerColor,
-            labelColor = textColor
+        else -> Triple(
+            stringResource(R.string.channel_status_available),
+            Color.Transparent,
+            MaterialTheme.colorScheme.onSurfaceVariant
         )
-    )
+    }
+    // A plain Box rather than AssistChip: the chip's 32dp minimum height and default
+    // padding made a passive status label outweigh the channel name beside it.
+    val outlined = containerColor == Color.Transparent
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(containerColor)
+            .then(
+                if (outlined) {
+                    Modifier.border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant,
+                        RoundedCornerShape(6.dp),
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = textColor,
+            maxLines = 1,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1025,7 +1090,7 @@ private fun ChannelDetailScreen(
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 12.dp),
                             thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
                         Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -1102,7 +1167,7 @@ private fun ChannelDetailScreen(
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 10.dp),
                             thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
                         Text(channel.bodyTemplate, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -1151,7 +1216,7 @@ private fun ChannelDetailScreen(
                 item {
                     OutlinedButton(
                         onClick = { navController.navigate(Routes.subscribers(channel.remoteId)) },
-                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Default.Person, contentDescription = null)
@@ -1164,7 +1229,7 @@ private fun ChannelDetailScreen(
                 item {
                     OutlinedButton(
                         onClick = { deleteDialog = true },
-                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
@@ -1242,7 +1307,7 @@ private fun TokenPanel(
                 Icon(
                     imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                     contentDescription = if (visible) stringResource(R.string.action_hide) else stringResource(R.string.action_show),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -1250,13 +1315,13 @@ private fun TokenPanel(
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 10.dp),
             thickness = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            color = MaterialTheme.colorScheme.outlineVariant
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = onReset,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
@@ -1671,27 +1736,13 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
         ) {
             if (showIntro) {
                 item {
-                    AppCard(
-                        modifier = Modifier.clickable { uriHandler.openUri("https://echobell.one/en/docs/direct") },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    ) {
-                        Row(verticalAlignment = Alignment.Top) {
-                            Icon(
-                                Icons.Default.Key,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(top = 2.dp)
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(stringResource(R.string.direct_intro_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                Text(stringResource(R.string.direct_intro_description), color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
-                            }
-                            IconButton(onClick = { showIntro = false }) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                            }
-                        }
-                    }
+                    IntroBanner(
+                        icon = Icons.Default.Key,
+                        title = stringResource(R.string.direct_intro_title),
+                        description = stringResource(R.string.direct_intro_description),
+                        onOpen = { uriHandler.openUri("https://echobell.one/en/docs/direct") },
+                        onDismiss = { showIntro = false },
+                    )
                 }
             }
             if (state.directKeys.isEmpty()) {
@@ -1779,7 +1830,7 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 10.dp),
             thickness = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            color = MaterialTheme.colorScheme.outlineVariant
         )
         Box(
             modifier = Modifier
@@ -1806,7 +1857,7 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
                 Icon(
                     imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                     contentDescription = if (visible) stringResource(R.string.action_hide) else stringResource(R.string.action_show),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -1814,12 +1865,12 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 10.dp),
             thickness = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            color = MaterialTheme.colorScheme.outlineVariant
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedIconButton(
                 onClick = { resetDialog = true },
-                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.action_reset))
             }
@@ -1841,13 +1892,15 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
             }
             OutlinedIconButton(
                 onClick = { clearDialog = true },
-                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
-                Icon(Icons.Default.VisibilityOff, contentDescription = stringResource(R.string.direct_clear_records))
+                // Not VisibilityOff (that is the show/hide token control directly above)
+                // and not a second bin shape, which would read as a duplicate of delete.
+                Icon(Icons.Default.ClearAll, contentDescription = stringResource(R.string.direct_clear_records))
             }
             OutlinedIconButton(
                 onClick = { deleteDialog = true },
-                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
                 colors = IconButtonDefaults.outlinedIconButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
                 )
@@ -1940,7 +1993,15 @@ private fun SettingsScreen(
                                 Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_user_settings))
                             }
                         }
-                        Text(stringResource(R.string.settings_data_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.height(8.dp))
+                        // Indented past the avatar so the note lines up with the name
+                        // above it rather than starting under the icon column.
+                        Text(
+                            stringResource(R.string.settings_data_note),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 36.dp),
+                        )
                     }
                 }
             }
@@ -2070,7 +2131,7 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
             item {
                 OutlinedButton(
                     onClick = { renameDialog = true },
-                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null)
@@ -2081,7 +2142,7 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
             item {
                 OutlinedButton(
                     onClick = { signOutDialog = true },
-                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error)
@@ -2167,7 +2228,7 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
                 AppCard {
                     Text(stringResource(R.string.invite_points_balance), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+                        Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
                         Text("${user?.pointsBalance ?: 0}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.width(8.dp))
@@ -2213,7 +2274,7 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
                         Spacer(Modifier.height(10.dp))
                         OutlinedButton(
                             onClick = { submitDialog = true },
-                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(stringResource(R.string.invite_enter_code))
@@ -2230,7 +2291,7 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        color = MaterialTheme.colorScheme.outlineVariant
                     )
                     InfoRow(stringResource(R.string.invite_redeem_month), stringResource(R.string.invite_redeem_month_value))
                     InfoRow(stringResource(R.string.invite_redeem_year), stringResource(R.string.invite_redeem_year_value))
@@ -2386,7 +2447,7 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
                                 Spacer(Modifier.height(8.dp))
                                 OutlinedButton(
                                     onClick = { billingManager.start() },
-                                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(stringResource(R.string.action_retry))
@@ -2666,6 +2727,7 @@ private fun ScreenScaffold(
     title: String,
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable () -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
@@ -2678,6 +2740,7 @@ private fun ScreenScaffold(
                 actions = actions,
             )
         },
+        floatingActionButton = floatingActionButton,
         content = content,
     )
 }
@@ -2694,7 +2757,10 @@ private fun CompactTopBar(
             .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .heightIn(min = 52.dp)
-            .padding(start = if (navigationIcon == null) 20.dp else 4.dp, end = 6.dp),
+            // Both branches land the leading icon on the 16dp content grid and the
+            // title at 52dp, so the header does not shift between screens that show
+            // the brand mark and screens that show a back button.
+            .padding(start = if (navigationIcon == null) 16.dp else 4.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (navigationIcon == null) {
@@ -2799,17 +2865,22 @@ private fun BrandPanel(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Box(Modifier.fillMaxWidth()) {
-            Icon(
-                painter = painterResource(R.drawable.ic_echobell_mark),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(110.dp)
-                    .align(Alignment.CenterStart)
-                    .offset(x = (-50).dp, y = 15.dp)
-                    .graphicsLayer(alpha = 0.16f),
-                tint = contentColor,
-            )
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), content = content)
+            // The watermark is nested in a matchParentSize box so its 110dp bounds do
+            // not drive the card's height. Measured directly it forced every brand
+            // panel to ~110dp tall, leaving a block of empty space under two lines.
+            Box(Modifier.matchParentSize()) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_echobell_mark),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(96.dp)
+                        .align(Alignment.CenterEnd)
+                        .offset(x = 28.dp)
+                        .graphicsLayer(alpha = 0.12f),
+                    tint = contentColor,
+                )
+            }
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), content = content)
         }
     }
 }
@@ -2818,13 +2889,83 @@ private fun BrandPanel(
 private fun EmptyState(icon: ImageVector, title: String, description: String) {
     AppCard {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(42.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            // Both lines need an explicit centre alignment: the column only centres the
+            // text block, so anything that wraps renders ragged-left inside it.
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+/**
+ * Dismissible "what is this screen" banner. Deliberately quieter than
+ * [PermissionBanner] and [FullScreenIntentBanner]: those ask the user to do
+ * something, this one only explains. Painting all three in a saturated brand
+ * container gave a passive hint the same weight as a blocked permission.
+ */
+@Composable
+private fun IntroBanner(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    onOpen: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AppCard(
+        modifier = Modifier.clickable(onClick = onOpen),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Row(verticalAlignment = Alignment.Top) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(4.dp))
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.size(24.dp),
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = stringResource(R.string.action_close),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }
@@ -2894,13 +3035,16 @@ private fun LimitBanner(text: String, onUpgrade: () -> Unit) {
     AppCard(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Spacer(Modifier.width(8.dp))
+            // primary-on-primaryContainer only reaches 2.5:1 in light mode; the
+            // container's own on-colour is the pair that is actually legible here.
             TextButton(
                 onClick = onUpgrade,
                 colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
-                Text(stringResource(R.string.action_upgrade))
+                Text(stringResource(R.string.action_upgrade), fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -2910,19 +3054,29 @@ private fun LimitBanner(text: String, onUpgrade: () -> Unit) {
 private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        modifier = modifier
-            .padding(horizontal = 4.dp)
-            .padding(top = 10.dp),
+        // No horizontal inset: section titles line up with the card edges below them.
+        modifier = modifier.padding(top = 10.dp),
         style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-        Text(value)
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        // Top alignment keeps the value on the label's first line when the label wraps,
+        // instead of letting the two columns drift apart.
+        verticalAlignment = Alignment.Top,
+    ) {
+        Text(
+            label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(value, textAlign = TextAlign.End, fontWeight = FontWeight.Medium)
     }
 }
 
