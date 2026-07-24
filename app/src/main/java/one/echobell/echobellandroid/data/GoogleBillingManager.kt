@@ -15,6 +15,7 @@ import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import one.echobell.echobellandroid.BuildConfig
+import one.echobell.echobellandroid.R
 
 private val SUBSCRIPTION_PRODUCT_IDS = listOf(
     BuildConfig.GOOGLE_PLAY_MONTHLY_SUBSCRIPTION_ID,
@@ -64,6 +65,8 @@ class GoogleBillingManager(
     ) -> Unit,
     private val onMessage: (String) -> Unit,
 ) : PurchasesUpdatedListener {
+    private val appContext = context.applicationContext
+
     var products = mutableStateOf<List<BillingProduct>>(emptyList())
         private set
     var loading = mutableStateOf(false)
@@ -107,7 +110,7 @@ class GoogleBillingManager(
                 } else {
                     loading.value = false
                     if (pendingUserInitiatedRestore) {
-                        onMessage(result.debugMessage.ifBlank { "Google Play is unavailable." })
+                        onMessage(result.debugMessage.ifBlank { appContext.getString(R.string.billing_unavailable) })
                         pendingUserInitiatedRestore = false
                     }
                 }
@@ -118,7 +121,7 @@ class GoogleBillingManager(
     fun launchPurchase(activity: Activity, product: BillingProduct) {
         val offerToken = product.offerToken
         if (offerToken == null) {
-            onMessage("No Google Play offer is available for this product.")
+            onMessage(appContext.getString(R.string.billing_no_offer))
             return
         }
 
@@ -136,7 +139,7 @@ class GoogleBillingManager(
 
         val result = billingClient.launchBillingFlow(activity, paramsBuilder.build())
         if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-            onMessage(result.debugMessage.ifBlank { "Google Play purchase flow could not be opened." })
+            onMessage(result.debugMessage.ifBlank { appContext.getString(R.string.billing_flow_failed) })
         }
     }
 
@@ -153,12 +156,12 @@ class GoogleBillingManager(
         ) { result, purchases ->
             if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                 if (purchases.isEmpty() && userInitiated) {
-                    onMessage("No active Google Play subscription was found.")
+                    onMessage(appContext.getString(R.string.billing_no_subscription_found))
                 } else {
                     purchases.forEach(::handlePurchase)
                 }
             } else if (userInitiated) {
-                onMessage(result.debugMessage.ifBlank { "Google Play purchases could not be restored." })
+                onMessage(result.debugMessage.ifBlank { appContext.getString(R.string.billing_restore_failed) })
             }
         }
     }
@@ -174,7 +177,7 @@ class GoogleBillingManager(
             BillingClient.BillingResponseCode.OK -> purchases.orEmpty().forEach(::handlePurchase)
             BillingClient.BillingResponseCode.USER_CANCELED -> Unit
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> restorePurchases(userInitiated = true)
-            else -> onMessage(result.debugMessage.ifBlank { "Google Play purchase failed." })
+            else -> onMessage(result.debugMessage.ifBlank { appContext.getString(R.string.billing_purchase_failed) })
         }
     }
 
@@ -194,7 +197,7 @@ class GoogleBillingManager(
         billingClient.queryProductDetailsAsync(query) { result, productDetailsResult ->
             loading.value = false
             if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-                onMessage(result.debugMessage.ifBlank { "Google Play products are unavailable." })
+                onMessage(result.debugMessage.ifBlank { appContext.getString(R.string.billing_products_unavailable) })
                 return@queryProductDetailsAsync
             }
 
@@ -216,8 +219,8 @@ class GoogleBillingManager(
                         title = details.name,
                         description = details.description,
                         price = paidPhase?.formattedPrice ?: "",
-                        period = paidPhase?.billingPeriod?.toDisplayPeriod().orEmpty(),
-                        trialPeriod = trialPhase?.billingPeriod?.toDisplayTrialPeriod().orEmpty(),
+                        period = paidPhase?.billingPeriod?.toDisplayPeriod(appContext).orEmpty(),
+                        trialPeriod = trialPhase?.billingPeriod?.toDisplayTrialPeriod(appContext).orEmpty(),
                         offerToken = offer.offerToken,
                         details = details,
                     )
@@ -227,7 +230,7 @@ class GoogleBillingManager(
 
     private fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState == Purchase.PurchaseState.PENDING) {
-            onMessage("Google Play purchase is pending. Premium unlocks after payment is complete.")
+            onMessage(appContext.getString(R.string.billing_purchase_pending))
             return
         }
         if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
@@ -264,7 +267,7 @@ class GoogleBillingManager(
         billingClient.acknowledgePurchase(params) { result ->
             val acknowledged = result.responseCode == BillingClient.BillingResponseCode.OK
             if (!acknowledged) {
-                onMessage(result.debugMessage.ifBlank { "Google Play purchase could not be acknowledged." })
+                onMessage(result.debugMessage.ifBlank { appContext.getString(R.string.billing_ack_failed) })
             }
             onAcknowledged(acknowledged)
         }
@@ -300,16 +303,16 @@ private fun ProductDetails.SubscriptionOfferDetails.toBillingOfferCandidate() =
         },
     )
 
-private fun String.toDisplayPeriod(): String = when (this) {
-    "P1M" -> "month"
-    "P1Y" -> "year"
+private fun String.toDisplayPeriod(context: Context): String = when (this) {
+    "P1M" -> context.getString(R.string.billing_period_month)
+    "P1Y" -> context.getString(R.string.billing_period_year)
     else -> lowercase()
 }
 
-private fun String.toDisplayTrialPeriod(): String =
+private fun String.toDisplayTrialPeriod(context: Context): String =
     Regex("^P(\\d+)D$").matchEntire(this)
         ?.groupValues
         ?.get(1)
         ?.toIntOrNull()
-        ?.let { days -> "$days ${if (days == 1) "day" else "days"} free" }
+        ?.let { days -> context.resources.getQuantityString(R.plurals.billing_trial_days_free, days, days) }
         ?: lowercase()

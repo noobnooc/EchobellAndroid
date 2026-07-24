@@ -1,0 +1,300 @@
+<resources>
+    <!-- Common actions -->
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_close">Schließen</string>
+    <string name="action_save">Speichern</string>
+    <string name="action_delete">Löschen</string>
+    <string name="action_retry">Erneut versuchen</string>
+    <string name="action_back">Zurück</string>
+    <string name="action_upgrade">Upgraden</string>
+    <string name="action_subscribe">Abonnieren</string>
+    <string name="action_unsubscribe">Abbestellen</string>
+    <string name="action_create">Erstellen</string>
+    <string name="action_submit">Einlösen</string>
+    <string name="action_share">Teilen</string>
+    <string name="action_copy">Kopieren</string>
+    <string name="action_reset">Zurücksetzen</string>
+    <string name="action_show">Anzeigen</string>
+    <string name="action_hide">Verbergen</string>
+    <string name="action_edit">Bearbeiten</string>
+    <string name="action_refresh">Aktualisieren</string>
+    <string name="action_remove">Entfernen</string>
+    <string name="action_cannot_be_undone">Diese Aktion kann nicht rückgängig gemacht werden.</string>
+    <string name="copied_fmt">%1$s kopiert.</string>
+
+    <!-- Auth -->
+    <string name="auth_tagline">Sofortige Benachrichtigungen bei kritischen Ereignissen.</string>
+    <string name="auth_continue_with_email">Mit E-Mail fortfahren</string>
+    <string name="auth_email_label">E-Mail-Adresse</string>
+    <string name="auth_email_invalid">Bitte gib eine gültige E-Mail-Adresse ein</string>
+    <string name="auth_send_code">Code senden</string>
+    <string name="auth_enter_code_title">Bestätigungscode eingeben</string>
+    <string name="auth_code_sent_to_fmt">Ein 6-stelliger Code wurde an %1$s gesendet.</string>
+    <string name="auth_code_label">Bestätigungscode</string>
+    <string name="auth_sign_in">Anmelden</string>
+    <string name="auth_use_another_email">Andere E-Mail-Adresse verwenden</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_records">Verlauf</string>
+    <string name="nav_channels">Kanäle</string>
+    <string name="nav_direct">Direkt</string>
+    <string name="nav_settings">Einstellungen</string>
+
+    <!-- Records -->
+    <string name="records_inbox_actions">Posteingang-Aktionen</string>
+    <string name="records_mark_all_read">Alle als gelesen markieren</string>
+    <string name="records_clear_all">Alle löschen</string>
+    <string name="records_clear_all_title">Alle Benachrichtigungen löschen</string>
+    <string name="records_clear_all_message">Alle Benachrichtigungseinträge auf diesem Gerät werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</string>
+    <string name="records_empty_title">Noch keine Einträge</string>
+    <string name="records_empty_description">Benachrichtigungen, die du über Kanäle oder direkte Webhooks erhältst, erscheinen hier.</string>
+    <string name="record_fallback_title">Benachrichtigung</string>
+    <string name="record_source">Quelle</string>
+    <string name="record_external">Extern</string>
+    <string name="record_mark_unread">Als ungelesen markieren</string>
+
+    <!-- Channel status -->
+    <string name="channel_status_inactive">Inaktiv</string>
+    <string name="channel_status_managed">Verwaltet</string>
+    <string name="channel_status_subscribed">Abonniert</string>
+    <string name="channel_status_available">Verfügbar</string>
+
+    <!-- Channels -->
+    <string name="channels_documentation">Dokumentation</string>
+    <string name="channels_new">Neuer Kanal</string>
+    <string name="channels_subscribe_fab">Kanal abonnieren</string>
+    <string name="channels_intro_description">Abonniere Kanäle, um Gruppen- und Themenbenachrichtigungen zu erhalten.</string>
+    <string name="channels_empty_title">Keine Kanäle</string>
+    <string name="channels_empty_description">Erstelle oder abonniere einen Kanal, um Benachrichtigungen zu erhalten.</string>
+    <plurals name="channels_limit_banner">
+        <item quantity="one">Kostenlose Nutzer können bis zu %d aktiven Kanal behalten.</item>
+        <item quantity="other">Kostenlose Nutzer können bis zu %d aktive Kanäle behalten.</item>
+    </plurals>
+    <string name="channel_last_triggered_fmt">Zuletzt: %1$s</string>
+    <string name="channel_never_triggered">Nie ausgelöst</string>
+    <string name="channel_not_found">Kanal nicht gefunden</string>
+    <string name="channel_number_fmt">Kanal #%1$d</string>
+
+    <!-- Channel detail -->
+    <string name="channel_trigger">Auslöser</string>
+    <string name="channel_webhook">Webhook</string>
+    <string name="channel_email">E-Mail</string>
+    <string name="channel_subscription_link">Abo-Link</string>
+    <string name="channel_link">Link</string>
+    <string name="channel_notification_section">Benachrichtigung</string>
+    <string name="channel_subscribe_prompt">Abonniere diesen Kanal auf diesem Android-Gerät, um Benachrichtigungen zu erhalten.</string>
+    <string name="channel_templates_section">Benachrichtigungsvorlagen</string>
+    <string name="channel_conditions_section">Bedingungen</string>
+    <string name="channel_link_template_section">Link-Vorlage</string>
+    <string name="channel_recent_records">Letzte Einträge</string>
+    <string name="delete_all">Alle löschen</string>
+    <string name="channel_manage_subscribers">Abonnenten verwalten</string>
+    <string name="channel_delete_title">Kanal löschen</string>
+    <string name="channel_unsubscribe_message">Du erhältst keine Benachrichtigungen mehr von diesem Kanal.</string>
+
+    <!-- Channel form -->
+    <string name="channel_form_new_title">Neuer Kanal</string>
+    <string name="channel_form_edit_title">Kanal bearbeiten</string>
+    <string name="channel_form_name_label">Kanalname *</string>
+    <string name="channel_form_name_required">Kanalname ist erforderlich</string>
+    <string name="channel_form_color">Farbe</string>
+    <string name="channel_form_title_template">Titelvorlage</string>
+    <string name="channel_form_title_placeholder">Standardmäßig der Kanalname</string>
+    <string name="channel_form_body_template">Textvorlage *</string>
+    <string name="channel_form_body_required">Textvorlage ist erforderlich</string>
+    <string name="channel_form_advanced">Erweiterte Einstellungen</string>
+    <string name="channel_form_conditions">Bedingungen</string>
+    <string name="channel_form_link_template">Link-Vorlage</string>
+    <string name="channel_form_note">Notiz</string>
+    <string name="channel_form_subscription">Abonnement</string>
+    <string name="channel_form_auto_subscribe">Nach dem Erstellen abonnieren</string>
+    <string name="channel_form_auto_subscribe_description">Dieses Gerät erhält sofort Benachrichtigungen.</string>
+
+    <!-- Subscribe -->
+    <string name="subscribe_title">Kanal abonnieren</string>
+    <string name="subscribe_prompt">Gib einen Abo-Link oder ein Token ein.</string>
+    <string name="subscribe_link_label">Abo-Link</string>
+    <string name="subscribe_invalid_token">Bitte gib ein gültiges Abo-Token oder einen gültigen Link ein</string>
+    <string name="subscribe_get_info">Informationen abrufen</string>
+
+    <!-- Direct keys -->
+    <string name="direct_new_key">Direktschlüssel erstellen</string>
+    <string name="direct_intro_title">Direkte Webhooks</string>
+    <string name="direct_intro_description">Sende Benachrichtigungen direkt mit Direktschlüsseln und einfachen HTTP-Anfragen.</string>
+    <string name="direct_empty_title">Keine Direktschlüssel</string>
+    <string name="direct_empty_description">Erstelle einen Direktschlüssel, um Benachrichtigungen direkt zu senden.</string>
+    <plurals name="direct_limit_banner">
+        <item quantity="one">Kostenlose Nutzer können bis zu %d Direktschlüssel erstellen.</item>
+        <item quantity="other">Kostenlose Nutzer können bis zu %d Direktschlüssel erstellen.</item>
+    </plurals>
+    <string name="direct_new_key_title">Neuer Direktschlüssel</string>
+    <string name="direct_key_name_label">Schlüsselname</string>
+    <string name="direct_key_label">Schlüssel</string>
+    <string name="direct_clear_records">Einträge löschen</string>
+    <string name="direct_reset_token_title">Token zurücksetzen</string>
+    <string name="direct_reset_token_message">Die aktuelle Webhook-URL funktioniert dann nicht mehr.</string>
+    <string name="direct_clear_records_title">Einträge löschen</string>
+    <string name="direct_clear_records_message">Alle Einträge dieses Direktschlüssels werden entfernt.</string>
+    <string name="direct_delete_title">Direktschlüssel löschen</string>
+
+    <!-- Settings -->
+    <string name="settings_account">Konto</string>
+    <string name="settings_hello_fmt">Hallo, %1$s</string>
+    <string name="settings_default_user">Nutzer</string>
+    <string name="settings_data_note">Kanal- und Abodaten werden auf Echobell-Servern gespeichert. Benachrichtigungseinträge bleiben auf diesem Gerät.</string>
+    <string name="settings_user_settings">Nutzereinstellungen</string>
+    <string name="settings_user_guide">Benutzerhandbuch</string>
+    <string name="settings_invite_friends">Freunde einladen</string>
+    <string name="settings_bonus_available">Bonus verfügbar</string>
+    <string name="settings_support">Support</string>
+    <string name="support_email">E-Mail-Support</string>
+    <string name="support_discord">Discord-Gruppe</string>
+    <string name="support_telegram">Telegram-Gruppe</string>
+    <string name="support_privacy">Datenschutzerklärung</string>
+    <string name="support_terms">Nutzungsbedingungen</string>
+    <string name="premium_active">Premium aktiv</string>
+    <string name="premium_until_fmt">Bis %1$s</string>
+    <string name="premium_title">Echobell Premium</string>
+    <string name="premium_pitch">Schalte unbegrenzte Kanäle, Direktschlüssel und Anrufbenachrichtigungen frei.</string>
+
+    <!-- User settings -->
+    <string name="user_settings_title">Nutzereinstellungen</string>
+    <string name="user_welcome_fmt">Willkommen, %1$s</string>
+    <string name="user_id">Nutzer-ID</string>
+    <string name="user_email">E-Mail</string>
+    <string name="user_premium_until">Premium bis</string>
+    <string name="user_edit_name">Namen ändern</string>
+    <string name="user_new_name">Neuer Name</string>
+    <string name="user_sign_out">Abmelden</string>
+    <string name="user_sign_out_message">Du musst dich erneut anmelden, um auf dein Konto zuzugreifen.</string>
+    <string name="user_delete_account">Konto löschen</string>
+    <string name="user_delete_message">Echobell sendet dir eine E-Mail zur Bestätigung der Löschung.</string>
+    <string name="user_request_deletion">Löschung beantragen</string>
+    <string name="user_delete_blocked">Lösche zuerst deine verwalteten Kanäle, bevor du die Kontolöschung beantragst.</string>
+
+    <!-- Invite -->
+    <string name="invite_points_balance">Punktestand</string>
+    <string name="invite_points">Punkte</string>
+    <string name="invite_redeem">Punkte einlösen</string>
+    <string name="invite_your_code">Dein Einladungscode</string>
+    <string name="invite_generate">Einladungscode generieren</string>
+    <string name="invite_code_copied">Einladungscode kopiert.</string>
+    <string name="invite_code_clip_label">Einladungscode</string>
+    <string name="invite_share_message_fmt">Komm zu mir auf Echobell! Nutze meinen Einladungscode: %1$s</string>
+    <string name="invite_share_code">Einladungscode teilen</string>
+    <string name="invite_have_code">Hast du einen Einladungscode?</string>
+    <string name="invite_enter_code_hint">Gib den Code eines Freundes ein und erhalte Bonuspunkte.</string>
+    <string name="invite_enter_code">Einladungscode eingeben</string>
+    <string name="invite_code_label">Einladungscode</string>
+    <string name="invite_rewards">Belohnungen</string>
+    <string name="invite_reward_signup">Freund registriert sich mit deinem Code</string>
+    <string name="invite_reward_signup_value">+100 Punkte für ihn</string>
+    <string name="invite_reward_monthly">Freund schließt Monatsabo ab</string>
+    <string name="invite_reward_monthly_value">+20 Punkte für dich</string>
+    <string name="invite_reward_annual">Freund schließt Jahresabo ab</string>
+    <string name="invite_reward_annual_value">+200 Punkte für dich</string>
+    <string name="invite_redeem_month">1 Monat Premium einlösen</string>
+    <string name="invite_redeem_month_value">200 Punkte</string>
+    <string name="invite_redeem_year">1 Jahr Premium einlösen</string>
+    <string name="invite_redeem_year_value">2000 Punkte</string>
+    <plurals name="redeem_balance">
+        <item quantity="one">Dein Guthaben: %d Punkt</item>
+        <item quantity="other">Dein Guthaben: %d Punkte</item>
+    </plurals>
+    <string name="redeem_month_option">1 Monat Premium – 200 Punkte</string>
+    <string name="redeem_year_option">1 Jahr Premium – 2000 Punkte</string>
+
+    <!-- Paywall -->
+    <string name="paywall_member_title">Du bist Premium-Mitglied</string>
+    <string name="paywall_member_until_fmt">Premium-Zugang bis %1$s</string>
+    <string name="paywall_unlock_title">Premium-Funktionen freischalten</string>
+    <string name="paywall_unlock_description">Abonniere über Google Play oder nutze Einladungspunkte, um den Premium-Zugang zu verlängern.</string>
+    <string name="paywall_feature_calls_title">Anrufbenachrichtigungen</string>
+    <string name="paywall_feature_calls_description">Erhalte dringende Benachrichtigungen mit hoher Android-Priorität.</string>
+    <string name="paywall_feature_channels_title">Unbegrenzte Kanäle</string>
+    <string name="paywall_feature_keys_title">Unbegrenzte Direktschlüssel</string>
+    <string name="paywall_feature_support_title">Echobell unterstützen</string>
+    <string name="paywall_feature_support_description">Halte den Dienst nachhaltig und schnell.</string>
+    <string name="paywall_premium_active">Premium ist für dieses Konto aktiv.</string>
+    <string name="paywall_products_unavailable">Google-Play-Produkte sind in diesem Build oder auf diesem Gerät nicht verfügbar.</string>
+    <string name="paywall_start_trial">Kostenlos testen</string>
+    <string name="paywall_restore">Käufe wiederherstellen</string>
+    <string name="paywall_terms">Bedingungen</string>
+    <string name="paywall_privacy">Datenschutz</string>
+    <string name="paywall_redeem_points">Einladungspunkte einlösen</string>
+
+    <!-- Announcements -->
+    <string name="announcements_title">Ankündigungen</string>
+    <string name="announcements_empty_title">Keine Ankündigungen</string>
+    <string name="announcements_empty_description">Du bist auf dem neuesten Stand.</string>
+    <string name="announcement_title">Ankündigung</string>
+    <string name="announcement_tap_to_view">Zum Anzeigen der Details tippen</string>
+    <string name="announcement_not_found">Ankündigung nicht gefunden</string>
+    <string name="level_info">Info</string>
+    <string name="level_warning">Warnung</string>
+    <string name="level_critical">Kritisch</string>
+
+    <!-- Subscribers -->
+    <string name="subscribers_title">Abonnenten</string>
+    <string name="subscribers_empty_title">Keine Abonnenten</string>
+    <string name="subscribers_empty_description">Dieser Kanal hat noch keine Abonnenten.</string>
+
+    <!-- Missing -->
+    <string name="missing_title">Nicht gefunden</string>
+
+    <!-- Permission banners -->
+    <string name="notif_permission_title">Benachrichtigungsberechtigung erforderlich</string>
+    <string name="notif_permission_description">Erlaube Benachrichtigungen, damit Kanalereignisse zugestellt werden können.</string>
+    <string name="notif_permission_allow">Benachrichtigungen erlauben</string>
+    <string name="fsi_title">Vollbild-Benachrichtigungen deaktiviert</string>
+    <string name="fsi_description">Erlaube dringenden Anrufbenachrichtigungen, über dem Sperrbildschirm zu erscheinen.</string>
+    <string name="fsi_enable">Vollbild-Benachrichtigungen aktivieren</string>
+
+    <!-- Notification types -->
+    <string name="notification_type_active">Standard</string>
+    <string name="notification_type_time_sensitive">Zeitkritisch</string>
+    <string name="notification_type_calling">Anruf</string>
+
+    <!-- Incoming call screen -->
+    <string name="call_incoming">Eingehende Benachrichtigung</string>
+    <string name="call_connected">Verbunden</string>
+    <string name="call_answer">Annehmen</string>
+    <string name="call_dismiss">Ablehnen</string>
+    <string name="call_end">Beenden</string>
+
+    <!-- System notification channels -->
+    <string name="notification_channel_name">Echobell-Benachrichtigungen</string>
+    <string name="notification_channel_description">Kanal- und direkte Webhook-Benachrichtigungen</string>
+    <string name="call_channel_name">Echobell-Anrufe</string>
+    <string name="call_channel_description">Dringende Benachrichtigungen im Anrufstil</string>
+
+    <!-- Snackbar messages -->
+    <string name="msg_verification_code_sent">Bestätigungscode gesendet.</string>
+    <string name="msg_deletion_email_sent">Bestätigungs-E-Mail zur Löschung gesendet.</string>
+    <string name="msg_trigger_token_reset">Auslöser-Token zurückgesetzt.</string>
+    <string name="msg_subscription_token_reset">Abo-Token zurückgesetzt.</string>
+    <string name="msg_direct_key_token_reset">Direktschlüssel-Token zurückgesetzt.</string>
+    <string name="msg_invite_code_applied">Einladungscode angewendet.</string>
+    <string name="msg_premium_extended">Premium verlängert.</string>
+    <string name="msg_subscription_updated">Abonnement aktualisiert.</string>
+    <string name="msg_not_signed_in">Nicht angemeldet</string>
+    <string name="msg_unknown_error">Unbekannter Fehler</string>
+    <string name="msg_unable_open_settings">Systemeinstellungen konnten nicht geöffnet werden.</string>
+
+    <!-- Google Play billing -->
+    <string name="billing_unavailable">Google Play ist nicht verfügbar.</string>
+    <string name="billing_no_offer">Für dieses Produkt ist kein Google-Play-Angebot verfügbar.</string>
+    <string name="billing_flow_failed">Der Google-Play-Kaufvorgang konnte nicht geöffnet werden.</string>
+    <string name="billing_no_subscription_found">Kein aktives Google-Play-Abonnement gefunden.</string>
+    <string name="billing_restore_failed">Google-Play-Käufe konnten nicht wiederhergestellt werden.</string>
+    <string name="billing_purchase_failed">Google-Play-Kauf fehlgeschlagen.</string>
+    <string name="billing_products_unavailable">Google-Play-Produkte sind nicht verfügbar.</string>
+    <string name="billing_purchase_pending">Google-Play-Kauf ausstehend. Premium wird nach Abschluss der Zahlung freigeschaltet.</string>
+    <string name="billing_ack_failed">Google-Play-Kauf konnte nicht bestätigt werden.</string>
+    <string name="billing_period_month">Monat</string>
+    <string name="billing_period_year">Jahr</string>
+    <plurals name="billing_trial_days_free">
+        <item quantity="one">%d Tag gratis</item>
+        <item quantity="other">%d Tage gratis</item>
+    </plurals>
+</resources>

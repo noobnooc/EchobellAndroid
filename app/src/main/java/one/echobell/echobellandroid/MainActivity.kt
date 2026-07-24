@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
                                 runCatching {
                                     fullScreenIntentPermissionLauncher.launch(fallbackIntent)
                                 }.onFailure {
-                                    viewModel.showMessage("Unable to open system settings.")
+                                    viewModel.showMessage(R.string.msg_unable_open_settings)
                                 }
                             }
                         } else {

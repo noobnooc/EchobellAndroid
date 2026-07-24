@@ -41,8 +41,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import one.echobell.echobellandroid.R
 import one.echobell.echobellandroid.push.NotificationHelper
 import one.echobell.echobellandroid.ui.EchobellTheme
 
@@ -195,7 +197,7 @@ private fun IncomingCallScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = if (answered) "Connected" else "Incoming notification",
+                        text = if (answered) stringResource(R.string.call_connected) else stringResource(R.string.call_incoming),
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White.copy(alpha = 0.82f),
                     )
@@ -228,14 +230,14 @@ private fun IncomingCallScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CallActionButton(
-                        label = if (answered) "End" else "Dismiss",
+                        label = if (answered) stringResource(R.string.call_end) else stringResource(R.string.call_dismiss),
                         icon = Icons.Default.CallEnd,
                         containerColor = Color(0xFFD93025),
                         onClick = onDismiss,
                     )
                     if (!answered) {
                         CallActionButton(
-                            label = "Answer",
+                            label = stringResource(R.string.call_answer),
                             icon = Icons.Default.Phone,
                             containerColor = Color(0xFF188038),
                             onClick = onAnswer,

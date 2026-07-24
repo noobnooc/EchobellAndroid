@@ -1,3 +1,304 @@
 <resources>
-    <string name="app_name">Echobell</string>
+    <string name="app_name" translatable="false">Echobell</string>
+
+    <!-- Common actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_back">Back</string>
+    <string name="action_upgrade">Upgrade</string>
+    <string name="action_subscribe">Subscribe</string>
+    <string name="action_unsubscribe">Unsubscribe</string>
+    <string name="action_create">Create</string>
+    <string name="action_submit">Submit</string>
+    <string name="action_share">Share</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_show">Show</string>
+    <string name="action_hide">Hide</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_cannot_be_undone">This action cannot be undone.</string>
+    <string name="copied_fmt">%1$s copied.</string>
+
+    <!-- Auth -->
+    <string name="auth_tagline">Instant Alerts for Critical Events.</string>
+    <string name="auth_continue_with_email">Continue with Email</string>
+    <string name="auth_email_label">Email address</string>
+    <string name="auth_email_invalid">Please enter a valid email address</string>
+    <string name="auth_send_code">Send Code</string>
+    <string name="auth_enter_code_title">Enter Verification Code</string>
+    <string name="auth_code_sent_to_fmt">A 6-digit code was sent to %1$s.</string>
+    <string name="auth_code_label">Verification code</string>
+    <string name="auth_sign_in">Sign In</string>
+    <string name="auth_use_another_email">Use another email</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_records">Records</string>
+    <string name="nav_channels">Channels</string>
+    <string name="nav_direct">Direct</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Records -->
+    <string name="records_inbox_actions">Inbox actions</string>
+    <string name="records_mark_all_read">Mark All as Read</string>
+    <string name="records_clear_all">Clear All</string>
+    <string name="records_clear_all_title">Clear All Notifications</string>
+    <string name="records_clear_all_message">This will delete all notification records from this device. This action cannot be undone.</string>
+    <string name="records_empty_title">No Records Yet</string>
+    <string name="records_empty_description">Notifications you receive through channels or direct webhooks will appear here.</string>
+    <string name="record_fallback_title">Notification</string>
+    <string name="record_source">Source</string>
+    <string name="record_external">External</string>
+    <string name="record_mark_unread">Mark Unread</string>
+
+    <!-- Channel status -->
+    <string name="channel_status_inactive">Inactive</string>
+    <string name="channel_status_managed">Managed</string>
+    <string name="channel_status_subscribed">Subscribed</string>
+    <string name="channel_status_available">Available</string>
+
+    <!-- Channels -->
+    <string name="channels_documentation">Documentation</string>
+    <string name="channels_new">New channel</string>
+    <string name="channels_subscribe_fab">Subscribe channel</string>
+    <string name="channels_intro_description">Subscribe to channels to receive group alerts and topic notifications.</string>
+    <string name="channels_empty_title">No Channels</string>
+    <string name="channels_empty_description">Create or subscribe to a channel to start receiving notifications.</string>
+    <plurals name="channels_limit_banner">
+        <item quantity="one">Free users can keep up to %d active channel.</item>
+        <item quantity="other">Free users can keep up to %d active channels.</item>
+    </plurals>
+    <string name="channel_last_triggered_fmt">Last: %1$s</string>
+    <string name="channel_never_triggered">Never triggered</string>
+    <string name="channel_not_found">Channel not found</string>
+    <string name="channel_number_fmt">Channel #%1$d</string>
+
+    <!-- Channel detail -->
+    <string name="channel_trigger">Trigger</string>
+    <string name="channel_webhook">Webhook</string>
+    <string name="channel_email">Email</string>
+    <string name="channel_subscription_link">Subscription Link</string>
+    <string name="channel_link">Link</string>
+    <string name="channel_notification_section">Notification</string>
+    <string name="channel_subscribe_prompt">Subscribe to this channel on this Android device to receive notifications.</string>
+    <string name="channel_templates_section">Notification Templates</string>
+    <string name="channel_conditions_section">Conditions</string>
+    <string name="channel_link_template_section">Link Template</string>
+    <string name="channel_recent_records">Recent Records</string>
+    <string name="delete_all">Delete All</string>
+    <string name="channel_manage_subscribers">Manage Subscribers</string>
+    <string name="channel_delete_title">Delete Channel</string>
+    <string name="channel_unsubscribe_message">You will no longer receive notifications from this channel.</string>
+
+    <!-- Channel form -->
+    <string name="channel_form_new_title">New Channel</string>
+    <string name="channel_form_edit_title">Edit Channel</string>
+    <string name="channel_form_name_label">Channel name *</string>
+    <string name="channel_form_name_required">Channel name is required</string>
+    <string name="channel_form_color">Color</string>
+    <string name="channel_form_title_template">Title template</string>
+    <string name="channel_form_title_placeholder">Defaults to channel name</string>
+    <string name="channel_form_body_template">Body template *</string>
+    <string name="channel_form_body_required">Body template is required</string>
+    <string name="channel_form_advanced">Advanced Settings</string>
+    <string name="channel_form_conditions">Conditions</string>
+    <string name="channel_form_link_template">Link template</string>
+    <string name="channel_form_note">Note</string>
+    <string name="channel_form_subscription">Subscription</string>
+    <string name="channel_form_auto_subscribe">Subscribe after creation</string>
+    <string name="channel_form_auto_subscribe_description">This device will receive notifications immediately.</string>
+
+    <!-- Subscribe -->
+    <string name="subscribe_title">Subscribe Channel</string>
+    <string name="subscribe_prompt">Enter a subscription link or token.</string>
+    <string name="subscribe_link_label">Subscription link</string>
+    <string name="subscribe_invalid_token">Please enter a valid subscription token or link</string>
+    <string name="subscribe_get_info">Get Information</string>
+
+    <!-- Direct keys -->
+    <string name="direct_new_key">Create direct key</string>
+    <string name="direct_intro_title">Direct Webhooks</string>
+    <string name="direct_intro_description">Send notifications directly using direct keys and simple HTTP requests.</string>
+    <string name="direct_empty_title">No Direct Keys</string>
+    <string name="direct_empty_description">Create a direct key to send notifications directly.</string>
+    <plurals name="direct_limit_banner">
+        <item quantity="one">Free users can create up to %d direct key.</item>
+        <item quantity="other">Free users can create up to %d direct keys.</item>
+    </plurals>
+    <string name="direct_new_key_title">New Direct Key</string>
+    <string name="direct_key_name_label">Key name</string>
+    <string name="direct_key_label">Key</string>
+    <string name="direct_clear_records">Clear records</string>
+    <string name="direct_reset_token_title">Reset Token</string>
+    <string name="direct_reset_token_message">The current webhook URL will stop working.</string>
+    <string name="direct_clear_records_title">Clear Records</string>
+    <string name="direct_clear_records_message">All records for this direct key will be removed.</string>
+    <string name="direct_delete_title">Delete Direct Key</string>
+
+    <!-- Settings -->
+    <string name="settings_account">Account</string>
+    <string name="settings_hello_fmt">Hello, %1$s</string>
+    <string name="settings_default_user">User</string>
+    <string name="settings_data_note">Channel and subscription data are stored on Echobell servers. Notification records stay on this device.</string>
+    <string name="settings_user_settings">User settings</string>
+    <string name="settings_user_guide">User Guide</string>
+    <string name="settings_invite_friends">Invite Friends</string>
+    <string name="settings_bonus_available">Bonus Available</string>
+    <string name="settings_support">Support</string>
+    <string name="support_email">Email Support</string>
+    <string name="support_x" translatable="false">X (Twitter)</string>
+    <string name="support_discord">Discord Group</string>
+    <string name="support_telegram">Telegram Group</string>
+    <string name="support_privacy">Privacy Policy</string>
+    <string name="support_terms">Terms of Service</string>
+    <string name="premium_active">Premium Active</string>
+    <string name="premium_until_fmt">Until %1$s</string>
+    <string name="premium_title">Echobell Premium</string>
+    <string name="premium_pitch">Unlock unlimited channels, direct keys, and call notifications.</string>
+
+    <!-- User settings -->
+    <string name="user_settings_title">User Settings</string>
+    <string name="user_welcome_fmt">Welcome, %1$s</string>
+    <string name="user_id">User ID</string>
+    <string name="user_email">Email</string>
+    <string name="user_premium_until">Premium until</string>
+    <string name="user_edit_name">Edit Name</string>
+    <string name="user_new_name">New name</string>
+    <string name="user_sign_out">Sign Out</string>
+    <string name="user_sign_out_message">You will need to sign in again to access your account.</string>
+    <string name="user_delete_account">Delete Account</string>
+    <string name="user_delete_message">Echobell will email you to confirm deletion.</string>
+    <string name="user_request_deletion">Request Deletion</string>
+    <string name="user_delete_blocked">Delete managed channels before requesting account deletion.</string>
+
+    <!-- Invite -->
+    <string name="invite_points_balance">Points Balance</string>
+    <string name="invite_points">points</string>
+    <string name="invite_redeem">Redeem Points</string>
+    <string name="invite_your_code">Your Invite Code</string>
+    <string name="invite_generate">Generate Invite Code</string>
+    <string name="invite_code_copied">Invite code copied.</string>
+    <string name="invite_code_clip_label">Invite Code</string>
+    <string name="invite_share_message_fmt">Join me on Echobell! Use my invite code: %1$s</string>
+    <string name="invite_share_code">Share Invite Code</string>
+    <string name="invite_have_code">Have an invite code?</string>
+    <string name="invite_enter_code_hint">Enter a friend\'s code to earn bonus points.</string>
+    <string name="invite_enter_code">Enter Invite Code</string>
+    <string name="invite_code_label">Invite code</string>
+    <string name="invite_rewards">Rewards</string>
+    <string name="invite_reward_signup">Friend signs up with your code</string>
+    <string name="invite_reward_signup_value">+100 points for them</string>
+    <string name="invite_reward_monthly">Friend subscribes monthly</string>
+    <string name="invite_reward_monthly_value">+20 points for you</string>
+    <string name="invite_reward_annual">Friend subscribes annual</string>
+    <string name="invite_reward_annual_value">+200 points for you</string>
+    <string name="invite_redeem_month">Redeem 1 month premium</string>
+    <string name="invite_redeem_month_value">200 points</string>
+    <string name="invite_redeem_year">Redeem 1 year premium</string>
+    <string name="invite_redeem_year_value">2000 points</string>
+    <plurals name="redeem_balance">
+        <item quantity="one">Your balance: %d point</item>
+        <item quantity="other">Your balance: %d points</item>
+    </plurals>
+    <string name="redeem_month_option">1 Month Premium – 200 points</string>
+    <string name="redeem_year_option">1 Year Premium – 2000 points</string>
+
+    <!-- Paywall -->
+    <string name="paywall_member_title">You\'re a Premium Member</string>
+    <string name="paywall_member_until_fmt">Premium access until %1$s</string>
+    <string name="paywall_unlock_title">Unlock Premium Features</string>
+    <string name="paywall_unlock_description">Subscribe with Google Play or use invite points to extend premium access.</string>
+    <string name="paywall_feature_calls_title">Call Notifications</string>
+    <string name="paywall_feature_calls_description">Get urgent notifications with high-priority Android delivery.</string>
+    <string name="paywall_feature_channels_title">Unlimited Channels</string>
+    <string name="paywall_feature_keys_title">Unlimited Direct Keys</string>
+    <string name="paywall_feature_support_title">Support Echobell</string>
+    <string name="paywall_feature_support_description">Keep the service sustainable and fast.</string>
+    <string name="paywall_google_play" translatable="false">Google Play</string>
+    <string name="paywall_premium_active">Premium is active on this account.</string>
+    <string name="paywall_products_unavailable">Google Play products are not available in this build or on this device.</string>
+    <string name="paywall_start_trial">Start Free Trial</string>
+    <string name="paywall_restore">Restore Purchases</string>
+    <string name="paywall_terms">Terms</string>
+    <string name="paywall_privacy">Privacy</string>
+    <string name="paywall_redeem_points">Redeem Invite Points</string>
+
+    <!-- Announcements -->
+    <string name="announcements_title">Announcements</string>
+    <string name="announcements_empty_title">No Announcements</string>
+    <string name="announcements_empty_description">You\'re all caught up for now.</string>
+    <string name="announcement_title">Announcement</string>
+    <string name="announcement_tap_to_view">Tap to view details</string>
+    <string name="announcement_not_found">Announcement not found</string>
+    <string name="level_info">Info</string>
+    <string name="level_warning">Warning</string>
+    <string name="level_critical">Critical</string>
+
+    <!-- Subscribers -->
+    <string name="subscribers_title">Subscribers</string>
+    <string name="subscribers_empty_title">No Subscribers</string>
+    <string name="subscribers_empty_description">This channel has no subscribers yet.</string>
+
+    <!-- Missing -->
+    <string name="missing_title">Missing</string>
+
+    <!-- Permission banners -->
+    <string name="notif_permission_title">Notification permission needed</string>
+    <string name="notif_permission_description">Allow notifications so channel events can be delivered.</string>
+    <string name="notif_permission_allow">Allow Notifications</string>
+    <string name="fsi_title">Full-screen alerts disabled</string>
+    <string name="fsi_description">Allow urgent call notifications to appear over the lock screen.</string>
+    <string name="fsi_enable">Enable Full-screen Alerts</string>
+
+    <!-- Notification types -->
+    <string name="notification_type_active">Standard</string>
+    <string name="notification_type_time_sensitive">Time-Sensitive</string>
+    <string name="notification_type_calling">Call</string>
+
+    <!-- Incoming call screen -->
+    <string name="call_incoming">Incoming notification</string>
+    <string name="call_connected">Connected</string>
+    <string name="call_answer">Answer</string>
+    <string name="call_dismiss">Dismiss</string>
+    <string name="call_end">End</string>
+
+    <!-- System notification channels -->
+    <string name="notification_channel_name">Echobell notifications</string>
+    <string name="notification_channel_description">Channel and direct webhook notifications</string>
+    <string name="call_channel_name">Echobell calls</string>
+    <string name="call_channel_description">Urgent call-style notifications</string>
+
+    <!-- Snackbar messages -->
+    <string name="msg_verification_code_sent">Verification code sent.</string>
+    <string name="msg_deletion_email_sent">Deletion confirmation email sent.</string>
+    <string name="msg_trigger_token_reset">Trigger token reset.</string>
+    <string name="msg_subscription_token_reset">Subscription token reset.</string>
+    <string name="msg_direct_key_token_reset">Direct key token reset.</string>
+    <string name="msg_invite_code_applied">Invite code applied.</string>
+    <string name="msg_premium_extended">Premium extended.</string>
+    <string name="msg_subscription_updated">Subscription updated.</string>
+    <string name="msg_not_signed_in">Not signed in</string>
+    <string name="msg_unknown_error">Unknown error</string>
+    <string name="msg_unable_open_settings">Unable to open system settings.</string>
+
+    <!-- Google Play billing -->
+    <string name="billing_unavailable">Google Play is unavailable.</string>
+    <string name="billing_no_offer">No Google Play offer is available for this product.</string>
+    <string name="billing_flow_failed">Google Play purchase flow could not be opened.</string>
+    <string name="billing_no_subscription_found">No active Google Play subscription was found.</string>
+    <string name="billing_restore_failed">Google Play purchases could not be restored.</string>
+    <string name="billing_purchase_failed">Google Play purchase failed.</string>
+    <string name="billing_products_unavailable">Google Play products are unavailable.</string>
+    <string name="billing_purchase_pending">Google Play purchase is pending. Premium unlocks after payment is complete.</string>
+    <string name="billing_ack_failed">Google Play purchase could not be acknowledged.</string>
+    <string name="billing_period_month">month</string>
+    <string name="billing_period_year">year</string>
+    <plurals name="billing_trial_days_free">
+        <item quantity="one">%d day free</item>
+        <item quantity="other">%d days free</item>
+    </plurals>
 </resources>

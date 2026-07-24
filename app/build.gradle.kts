@@ -105,6 +105,11 @@ android {
         }
     }
 
+    androidResources {
+        // Keep only the locales the app actually ships; strips unused library translations.
+        localeFilters += listOf("en", "b+zh+Hans", "b+zh+Hant", "fr", "de", "ja", "es")
+    }
+
     buildTypes {
         debug {
             buildConfigField("String", "API_BASE_URL", "\"${debugApiBaseUrl.get()}\"")
@@ -112,7 +117,8 @@ android {
             buildConfigField("String", "EMAIL_TRIGGER_DOMAIN", "\"${emailTriggerDomain.get()}\"")
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             ndk {
                 debugSymbolLevel = "SYMBOL_TABLE"
             }
@@ -135,6 +141,16 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+    }
+}
+
+// AGP's produceReleaseComposeMapping task resolves compose-group-mapping at a version
+// that predates the artifact's first publication (2.3.0); pin it to the project's Kotlin version.
+configurations.matching { it.name.endsWith("composeMappingProducerClasspath", ignoreCase = true) }.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name == "compose-group-mapping") {
+            useVersion(libs.versions.kotlin.get())
+        }
     }
 }
 

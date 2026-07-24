@@ -36,10 +36,10 @@ object NotificationHelper {
         val manager = context.getSystemService(NotificationManager::class.java)
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Echobell notifications",
+            context.getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "Channel and direct webhook notifications"
+            description = context.getString(R.string.notification_channel_description)
         }
         manager.createNotificationChannel(channel)
 
@@ -49,10 +49,10 @@ object NotificationHelper {
             .build()
         val callChannel = NotificationChannel(
             CALL_CHANNEL_ID,
-            "Echobell calls",
+            context.getString(R.string.call_channel_name),
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "Urgent call-style notifications"
+            description = context.getString(R.string.call_channel_description)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             enableVibration(true)
             setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE), callAudioAttributes)

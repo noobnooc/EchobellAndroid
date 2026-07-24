@@ -5,6 +5,7 @@ import android.app.Application
 import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import one.echobell.echobellandroid.R
 import one.echobell.echobellandroid.push.FirebaseBootstrap
 import one.echobell.echobellandroid.push.NotificationHelper
 
@@ -95,7 +97,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
     fun sendVerificationCode(email: String, onSent: () -> Unit) {
         runAction {
             api.sendVerificationCode(email.trim())
-            showMessage("Verification code sent.")
+            showMessage(R.string.msg_verification_code_sent)
             onSent()
         }
     }
@@ -143,7 +145,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
         runWithFreshJwt { jwt ->
             api.requestAccountDeletion(jwt)
             signOut()
-            showMessage("Deletion confirmation email sent.")
+            showMessage(R.string.msg_deletion_email_sent)
         }
     }
 
@@ -256,7 +258,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
         runWithFreshJwt { jwt ->
             val newToken = api.resetChannelTriggerToken(jwt, channelId)
             updateChannelLocal(channelId) { it.copy(triggerToken = newToken) }
-            showMessage("Trigger token reset.")
+            showMessage(R.string.msg_trigger_token_reset)
         }
     }
 
@@ -264,7 +266,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
         runWithFreshJwt { jwt ->
             val newToken = api.resetChannelSubscriptionToken(jwt, channelId)
             updateChannelLocal(channelId) { it.copy(subscriptionToken = newToken) }
-            showMessage("Subscription token reset.")
+            showMessage(R.string.msg_subscription_token_reset)
         }
     }
 
@@ -306,7 +308,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
             }
             store.saveDirectKeys(directKeys)
             _state.update { it.copy(directKeys = directKeys) }
-            showMessage("Direct key token reset.")
+            showMessage(R.string.msg_direct_key_token_reset)
         }
     }
 
@@ -384,7 +386,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
             val response = api.submitInviteCode(jwt, code.trim().uppercase())
             store.saveUser(response.user.toUser())
             _state.update { it.copy(user = response.user.toUser()) }
-            showMessage("Invite code applied.")
+            showMessage(R.string.msg_invite_code_applied)
         }
     }
 
@@ -393,7 +395,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
             val response = api.redeemPoints(jwt, tier)
             store.saveUser(response.user.toUser())
             _state.update { it.copy(user = response.user.toUser()) }
-            showMessage("Premium extended.")
+            showMessage(R.string.msg_premium_extended)
         }
     }
 
@@ -407,7 +409,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
             try {
-                val jwt = _state.value.jwt ?: throw ApiException(401, null, "Not signed in")
+                val jwt = _state.value.jwt ?: throw ApiException(401, null, appContext.getString(R.string.msg_not_signed_in))
                 try {
                     api.reportGoogleSubscription(jwt, productId, purchaseToken)
                 } catch (error: ApiException) {
@@ -420,7 +422,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
                 onVerified()
                 refreshSessionInternal()
                 if (showSuccessMessage) {
-                    showMessage("Subscription updated.")
+                    showMessage(R.string.msg_subscription_updated)
                 }
             } catch (error: Exception) {
                 onFailure()
@@ -455,6 +457,10 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
 
     fun showMessage(text: String) {
         _state.update { it.copy(messages = it.messages + UiMessage(text = text)) }
+    }
+
+    fun showMessage(@StringRes resId: Int, vararg args: Any) {
+        showMessage(appContext.getString(resId, *args))
     }
 
     private suspend fun syncChannelsInternal(jwt: String) {
@@ -498,7 +504,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
     }
 
     private suspend fun refreshSessionInternal(): String {
-        val deviceToken = _state.value.deviceToken ?: throw ApiException(401, null, "Not signed in")
+        val deviceToken = _state.value.deviceToken ?: throw ApiException(401, null, appContext.getString(R.string.msg_not_signed_in))
         val response = api.refresh(deviceToken, _state.value.notificationToken)
         store.saveAuth(response.jwt, deviceToken)
         store.saveUser(response.user.toUser())
@@ -508,7 +514,7 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
 
     private fun runWithFreshJwt(silent: Boolean = false, block: suspend (String) -> Unit) {
         runAction(silent = silent) {
-            val jwt = _state.value.jwt ?: throw ApiException(401, null, "Not signed in")
+            val jwt = _state.value.jwt ?: throw ApiException(401, null, appContext.getString(R.string.msg_not_signed_in))
             try {
                 block(jwt)
             } catch (error: ApiException) {
@@ -582,9 +588,9 @@ class EchobellViewModel(application: Application) : AndroidViewModel(application
         AnnouncementLevel.Warning -> 2
         AnnouncementLevel.Info, AnnouncementLevel.Unknown -> 1
     }
-}
 
-private fun Throwable.readableMessage(): String = when (this) {
-    is ApiException -> message
-    else -> localizedMessage ?: "Unknown error"
+    private fun Throwable.readableMessage(): String = when (this) {
+        is ApiException -> message
+        else -> localizedMessage ?: appContext.getString(R.string.msg_unknown_error)
+    }
 }

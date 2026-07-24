@@ -5,10 +5,10 @@ import java.util.UUID
 const val FREE_USER_CHANNEL_LIMIT = 3
 const val FREE_USER_DIRECT_KEY_LIMIT = 3
 
-enum class NotificationType(val value: String, val label: String) {
-    Active("active", "Standard"),
-    TimeSensitive("time-sensitive", "Time-Sensitive"),
-    Calling("calling", "Call");
+enum class NotificationType(val value: String) {
+    Active("active"),
+    TimeSensitive("time-sensitive"),
+    Calling("calling");
 
     companion object {
         fun fromValue(value: String?): NotificationType? = entries.firstOrNull { it.value == value }

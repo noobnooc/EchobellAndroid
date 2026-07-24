@@ -1,0 +1,296 @@
+<resources>
+    <!-- Common actions -->
+    <string name="action_cancel">取消</string>
+    <string name="action_close">關閉</string>
+    <string name="action_save">儲存</string>
+    <string name="action_delete">刪除</string>
+    <string name="action_retry">重試</string>
+    <string name="action_back">返回</string>
+    <string name="action_upgrade">升級</string>
+    <string name="action_subscribe">訂閱</string>
+    <string name="action_unsubscribe">取消訂閱</string>
+    <string name="action_create">建立</string>
+    <string name="action_submit">提交</string>
+    <string name="action_share">分享</string>
+    <string name="action_copy">複製</string>
+    <string name="action_reset">重設</string>
+    <string name="action_show">顯示</string>
+    <string name="action_hide">隱藏</string>
+    <string name="action_edit">編輯</string>
+    <string name="action_refresh">重新整理</string>
+    <string name="action_remove">移除</string>
+    <string name="action_cannot_be_undone">此操作無法復原。</string>
+    <string name="copied_fmt">已複製%1$s。</string>
+
+    <!-- Auth -->
+    <string name="auth_tagline">關鍵事件，即時提醒。</string>
+    <string name="auth_continue_with_email">使用電子郵件繼續</string>
+    <string name="auth_email_label">電子郵件地址</string>
+    <string name="auth_email_invalid">請輸入有效的電子郵件地址</string>
+    <string name="auth_send_code">傳送驗證碼</string>
+    <string name="auth_enter_code_title">輸入驗證碼</string>
+    <string name="auth_code_sent_to_fmt">6 位數驗證碼已傳送至 %1$s。</string>
+    <string name="auth_code_label">驗證碼</string>
+    <string name="auth_sign_in">登入</string>
+    <string name="auth_use_another_email">使用其他電子郵件</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_records">記錄</string>
+    <string name="nav_channels">頻道</string>
+    <string name="nav_direct">直連</string>
+    <string name="nav_settings">設定</string>
+
+    <!-- Records -->
+    <string name="records_inbox_actions">收件匣操作</string>
+    <string name="records_mark_all_read">全部標為已讀</string>
+    <string name="records_clear_all">全部清除</string>
+    <string name="records_clear_all_title">清除所有通知</string>
+    <string name="records_clear_all_message">這將刪除此裝置上的所有通知記錄。此操作無法復原。</string>
+    <string name="records_empty_title">尚無記錄</string>
+    <string name="records_empty_description">你透過頻道或直連 Webhook 收到的通知將顯示在這裡。</string>
+    <string name="record_fallback_title">通知</string>
+    <string name="record_source">來源</string>
+    <string name="record_external">外部連結</string>
+    <string name="record_mark_unread">標為未讀</string>
+
+    <!-- Channel status -->
+    <string name="channel_status_inactive">已失效</string>
+    <string name="channel_status_managed">管理中</string>
+    <string name="channel_status_subscribed">已訂閱</string>
+    <string name="channel_status_available">可訂閱</string>
+
+    <!-- Channels -->
+    <string name="channels_documentation">文件</string>
+    <string name="channels_new">新增頻道</string>
+    <string name="channels_subscribe_fab">訂閱頻道</string>
+    <string name="channels_intro_description">訂閱頻道以接收群組提醒與主題通知。</string>
+    <string name="channels_empty_title">尚無頻道</string>
+    <string name="channels_empty_description">建立或訂閱一個頻道，開始接收通知。</string>
+    <plurals name="channels_limit_banner">
+        <item quantity="other">免費使用者最多可保留 %d 個使用中的頻道。</item>
+    </plurals>
+    <string name="channel_last_triggered_fmt">上次觸發：%1$s</string>
+    <string name="channel_never_triggered">從未觸發</string>
+    <string name="channel_not_found">找不到頻道</string>
+    <string name="channel_number_fmt">頻道 #%1$d</string>
+
+    <!-- Channel detail -->
+    <string name="channel_trigger">觸發</string>
+    <string name="channel_webhook">Webhook</string>
+    <string name="channel_email">電子郵件</string>
+    <string name="channel_subscription_link">訂閱連結</string>
+    <string name="channel_link">連結</string>
+    <string name="channel_notification_section">通知</string>
+    <string name="channel_subscribe_prompt">在此 Android 裝置上訂閱該頻道以接收通知。</string>
+    <string name="channel_templates_section">通知範本</string>
+    <string name="channel_conditions_section">觸發條件</string>
+    <string name="channel_link_template_section">連結範本</string>
+    <string name="channel_recent_records">最近記錄</string>
+    <string name="delete_all">全部刪除</string>
+    <string name="channel_manage_subscribers">管理訂閱者</string>
+    <string name="channel_delete_title">刪除頻道</string>
+    <string name="channel_unsubscribe_message">你將不再收到此頻道的通知。</string>
+
+    <!-- Channel form -->
+    <string name="channel_form_new_title">新增頻道</string>
+    <string name="channel_form_edit_title">編輯頻道</string>
+    <string name="channel_form_name_label">頻道名稱 *</string>
+    <string name="channel_form_name_required">請填寫頻道名稱</string>
+    <string name="channel_form_color">顏色</string>
+    <string name="channel_form_title_template">標題範本</string>
+    <string name="channel_form_title_placeholder">預設使用頻道名稱</string>
+    <string name="channel_form_body_template">內文範本 *</string>
+    <string name="channel_form_body_required">請填寫內文範本</string>
+    <string name="channel_form_advanced">進階設定</string>
+    <string name="channel_form_conditions">觸發條件</string>
+    <string name="channel_form_link_template">連結範本</string>
+    <string name="channel_form_note">備註</string>
+    <string name="channel_form_subscription">訂閱</string>
+    <string name="channel_form_auto_subscribe">建立後自動訂閱</string>
+    <string name="channel_form_auto_subscribe_description">此裝置將立即開始接收通知。</string>
+
+    <!-- Subscribe -->
+    <string name="subscribe_title">訂閱頻道</string>
+    <string name="subscribe_prompt">輸入訂閱連結或權杖。</string>
+    <string name="subscribe_link_label">訂閱連結</string>
+    <string name="subscribe_invalid_token">請輸入有效的訂閱權杖或連結</string>
+    <string name="subscribe_get_info">取得資訊</string>
+
+    <!-- Direct keys -->
+    <string name="direct_new_key">建立直連金鑰</string>
+    <string name="direct_intro_title">直連 Webhook</string>
+    <string name="direct_intro_description">使用直連金鑰與簡單的 HTTP 請求直接傳送通知。</string>
+    <string name="direct_empty_title">尚無直連金鑰</string>
+    <string name="direct_empty_description">建立一個直連金鑰以直接傳送通知。</string>
+    <plurals name="direct_limit_banner">
+        <item quantity="other">免費使用者最多可建立 %d 個直連金鑰。</item>
+    </plurals>
+    <string name="direct_new_key_title">新增直連金鑰</string>
+    <string name="direct_key_name_label">金鑰名稱</string>
+    <string name="direct_key_label">金鑰</string>
+    <string name="direct_clear_records">清除記錄</string>
+    <string name="direct_reset_token_title">重設權杖</string>
+    <string name="direct_reset_token_message">目前的 Webhook 網址將立即失效。</string>
+    <string name="direct_clear_records_title">清除記錄</string>
+    <string name="direct_clear_records_message">此直連金鑰的所有記錄將被移除。</string>
+    <string name="direct_delete_title">刪除直連金鑰</string>
+
+    <!-- Settings -->
+    <string name="settings_account">帳戶</string>
+    <string name="settings_hello_fmt">你好，%1$s</string>
+    <string name="settings_default_user">使用者</string>
+    <string name="settings_data_note">頻道與訂閱資料儲存在 Echobell 伺服器上，通知記錄僅保存在此裝置。</string>
+    <string name="settings_user_settings">使用者設定</string>
+    <string name="settings_user_guide">使用指南</string>
+    <string name="settings_invite_friends">邀請好友</string>
+    <string name="settings_bonus_available">可領獎勵</string>
+    <string name="settings_support">支援</string>
+    <string name="support_email">電子郵件支援</string>
+    <string name="support_discord">Discord 群組</string>
+    <string name="support_telegram">Telegram 群組</string>
+    <string name="support_privacy">隱私權政策</string>
+    <string name="support_terms">服務條款</string>
+    <string name="premium_active">Premium 已啟用</string>
+    <string name="premium_until_fmt">有效期至 %1$s</string>
+    <string name="premium_title">Echobell Premium</string>
+    <string name="premium_pitch">解鎖無限頻道、直連金鑰與來電通知。</string>
+
+    <!-- User settings -->
+    <string name="user_settings_title">使用者設定</string>
+    <string name="user_welcome_fmt">歡迎，%1$s</string>
+    <string name="user_id">使用者 ID</string>
+    <string name="user_email">電子郵件</string>
+    <string name="user_premium_until">Premium 有效期至</string>
+    <string name="user_edit_name">修改名稱</string>
+    <string name="user_new_name">新名稱</string>
+    <string name="user_sign_out">登出</string>
+    <string name="user_sign_out_message">你需要重新登入才能存取你的帳戶。</string>
+    <string name="user_delete_account">刪除帳戶</string>
+    <string name="user_delete_message">Echobell 將寄送電子郵件給你以確認刪除。</string>
+    <string name="user_request_deletion">申請刪除</string>
+    <string name="user_delete_blocked">申請刪除帳戶前，請先刪除你管理的頻道。</string>
+
+    <!-- Invite -->
+    <string name="invite_points_balance">點數餘額</string>
+    <string name="invite_points">點數</string>
+    <string name="invite_redeem">兌換點數</string>
+    <string name="invite_your_code">你的邀請碼</string>
+    <string name="invite_generate">產生邀請碼</string>
+    <string name="invite_code_copied">已複製邀請碼。</string>
+    <string name="invite_code_clip_label">邀請碼</string>
+    <string name="invite_share_message_fmt">來 Echobell 和我一起吧！使用我的邀請碼：%1$s</string>
+    <string name="invite_share_code">分享邀請碼</string>
+    <string name="invite_have_code">有邀請碼嗎？</string>
+    <string name="invite_enter_code_hint">輸入好友的邀請碼即可獲得獎勵點數。</string>
+    <string name="invite_enter_code">輸入邀請碼</string>
+    <string name="invite_code_label">邀請碼</string>
+    <string name="invite_rewards">獎勵規則</string>
+    <string name="invite_reward_signup">好友使用你的邀請碼註冊</string>
+    <string name="invite_reward_signup_value">對方 +100 點</string>
+    <string name="invite_reward_monthly">好友訂閱月費方案</string>
+    <string name="invite_reward_monthly_value">你 +20 點</string>
+    <string name="invite_reward_annual">好友訂閱年費方案</string>
+    <string name="invite_reward_annual_value">你 +200 點</string>
+    <string name="invite_redeem_month">兌換 1 個月 Premium</string>
+    <string name="invite_redeem_month_value">200 點</string>
+    <string name="invite_redeem_year">兌換 1 年 Premium</string>
+    <string name="invite_redeem_year_value">2000 點</string>
+    <plurals name="redeem_balance">
+        <item quantity="other">你的餘額：%d 點</item>
+    </plurals>
+    <string name="redeem_month_option">1 個月 Premium – 200 點</string>
+    <string name="redeem_year_option">1 年 Premium – 2000 點</string>
+
+    <!-- Paywall -->
+    <string name="paywall_member_title">你已是 Premium 會員</string>
+    <string name="paywall_member_until_fmt">Premium 有效期至 %1$s</string>
+    <string name="paywall_unlock_title">解鎖 Premium 功能</string>
+    <string name="paywall_unlock_description">透過 Google Play 訂閱，或使用邀請點數延長 Premium 有效期。</string>
+    <string name="paywall_feature_calls_title">來電通知</string>
+    <string name="paywall_feature_calls_description">以 Android 高優先權方式送達緊急通知。</string>
+    <string name="paywall_feature_channels_title">無限頻道</string>
+    <string name="paywall_feature_keys_title">無限直連金鑰</string>
+    <string name="paywall_feature_support_title">支持 Echobell</string>
+    <string name="paywall_feature_support_description">讓服務持續、快速地運作下去。</string>
+    <string name="paywall_premium_active">此帳戶的 Premium 已啟用。</string>
+    <string name="paywall_products_unavailable">目前的組建或裝置無法取得 Google Play 商品。</string>
+    <string name="paywall_start_trial">開始免費試用</string>
+    <string name="paywall_restore">恢復購買</string>
+    <string name="paywall_terms">條款</string>
+    <string name="paywall_privacy">隱私權</string>
+    <string name="paywall_redeem_points">兌換邀請點數</string>
+
+    <!-- Announcements -->
+    <string name="announcements_title">公告</string>
+    <string name="announcements_empty_title">尚無公告</string>
+    <string name="announcements_empty_description">目前沒有新的公告。</string>
+    <string name="announcement_title">公告</string>
+    <string name="announcement_tap_to_view">輕觸以檢視詳情</string>
+    <string name="announcement_not_found">找不到公告</string>
+    <string name="level_info">資訊</string>
+    <string name="level_warning">警告</string>
+    <string name="level_critical">緊急</string>
+
+    <!-- Subscribers -->
+    <string name="subscribers_title">訂閱者</string>
+    <string name="subscribers_empty_title">尚無訂閱者</string>
+    <string name="subscribers_empty_description">此頻道還沒有訂閱者。</string>
+
+    <!-- Missing -->
+    <string name="missing_title">找不到</string>
+
+    <!-- Permission banners -->
+    <string name="notif_permission_title">需要通知權限</string>
+    <string name="notif_permission_description">允許通知，以便送達頻道事件提醒。</string>
+    <string name="notif_permission_allow">允許通知</string>
+    <string name="fsi_title">全螢幕提醒已停用</string>
+    <string name="fsi_description">允許緊急來電通知顯示在鎖定畫面之上。</string>
+    <string name="fsi_enable">啟用全螢幕提醒</string>
+
+    <!-- Notification types -->
+    <string name="notification_type_active">標準</string>
+    <string name="notification_type_time_sensitive">具時效性</string>
+    <string name="notification_type_calling">來電</string>
+
+    <!-- Incoming call screen -->
+    <string name="call_incoming">通知來電</string>
+    <string name="call_connected">已接通</string>
+    <string name="call_answer">接聽</string>
+    <string name="call_dismiss">掛斷</string>
+    <string name="call_end">結束</string>
+
+    <!-- System notification channels -->
+    <string name="notification_channel_name">Echobell 通知</string>
+    <string name="notification_channel_description">頻道與直連 Webhook 通知</string>
+    <string name="call_channel_name">Echobell 來電</string>
+    <string name="call_channel_description">緊急來電式通知</string>
+
+    <!-- Snackbar messages -->
+    <string name="msg_verification_code_sent">驗證碼已傳送。</string>
+    <string name="msg_deletion_email_sent">刪除確認郵件已寄出。</string>
+    <string name="msg_trigger_token_reset">觸發權杖已重設。</string>
+    <string name="msg_subscription_token_reset">訂閱權杖已重設。</string>
+    <string name="msg_direct_key_token_reset">直連金鑰權杖已重設。</string>
+    <string name="msg_invite_code_applied">邀請碼已使用。</string>
+    <string name="msg_premium_extended">Premium 已延長。</string>
+    <string name="msg_subscription_updated">訂閱已更新。</string>
+    <string name="msg_not_signed_in">未登入</string>
+    <string name="msg_unknown_error">未知錯誤</string>
+    <string name="msg_unable_open_settings">無法開啟系統設定。</string>
+
+    <!-- Google Play billing -->
+    <string name="billing_unavailable">Google Play 目前無法使用。</string>
+    <string name="billing_no_offer">此商品暫無可用的 Google Play 優惠。</string>
+    <string name="billing_flow_failed">無法開啟 Google Play 購買流程。</string>
+    <string name="billing_no_subscription_found">找不到有效的 Google Play 訂閱。</string>
+    <string name="billing_restore_failed">無法恢復 Google Play 購買。</string>
+    <string name="billing_purchase_failed">Google Play 購買失敗。</string>
+    <string name="billing_products_unavailable">Google Play 商品無法使用。</string>
+    <string name="billing_purchase_pending">Google Play 購買處理中，付款完成後即可解鎖 Premium。</string>
+    <string name="billing_ack_failed">無法確認 Google Play 購買。</string>
+    <string name="billing_period_month">月</string>
+    <string name="billing_period_year">年</string>
+    <plurals name="billing_trial_days_free">
+        <item quantity="other">免費試用 %d 天</item>
+    </plurals>
+</resources>

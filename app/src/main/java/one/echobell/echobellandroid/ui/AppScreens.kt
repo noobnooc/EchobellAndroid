@@ -5,8 +5,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.app.Activity
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -118,8 +120,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -162,6 +167,7 @@ import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
 
 private object Routes {
@@ -253,7 +259,7 @@ fun EchobellApp(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ) {
-                    Icon(Icons.Default.Link, contentDescription = "Subscribe channel")
+                    Icon(Icons.Default.Link, contentDescription = stringResource(R.string.channels_subscribe_fab))
                 }
             }
         },
@@ -281,21 +287,21 @@ fun EchobellApp(
                     arguments = listOf(navArgument("id") { type = NavType.IntType }),
                 ) { entry ->
                     val channel = state.channels.firstOrNull { it.remoteId == entry.arguments?.getInt("id") }
-                    if (channel == null) MissingScreen("Channel not found", navController) else ChannelDetailScreen(state, viewModel, navController, channel)
+                    if (channel == null) MissingScreen(stringResource(R.string.channel_not_found), navController) else ChannelDetailScreen(state, viewModel, navController, channel)
                 }
                 composable(
                     Routes.ChannelEdit,
                     arguments = listOf(navArgument("id") { type = NavType.IntType }),
                 ) { entry ->
                     val channel = state.channels.firstOrNull { it.remoteId == entry.arguments?.getInt("id") }
-                    if (channel == null) MissingScreen("Channel not found", navController) else ChannelFormScreen(state, viewModel, navController, channel)
+                    if (channel == null) MissingScreen(stringResource(R.string.channel_not_found), navController) else ChannelFormScreen(state, viewModel, navController, channel)
                 }
                 composable(
                     Routes.Subscribers,
                     arguments = listOf(navArgument("id") { type = NavType.IntType }),
                 ) { entry ->
                     val channel = state.channels.firstOrNull { it.remoteId == entry.arguments?.getInt("id") }
-                    if (channel == null) MissingScreen("Channel not found", navController) else SubscribersScreen(viewModel, navController, channel)
+                    if (channel == null) MissingScreen(stringResource(R.string.channel_not_found), navController) else SubscribersScreen(viewModel, navController, channel)
                 }
                 composable(
                     Routes.Subscribe,
@@ -336,19 +342,21 @@ fun EchobellApp(
                     arguments = listOf(navArgument("id") { type = NavType.IntType }),
                 ) { entry ->
                     val announcement = state.announcements.firstOrNull { it.id == entry.arguments?.getInt("id") }
-                    if (announcement == null) MissingScreen("Announcement not found", navController) else AnnouncementDetailScreen(announcement, viewModel, navController)
+                    if (announcement == null) MissingScreen(stringResource(R.string.announcement_not_found), navController) else AnnouncementDetailScreen(announcement, viewModel, navController)
                 }
             }
         }
     }
 }
 
+private val EMAIL_REGEX = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}$")
+
 @Composable
 private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbarHostState: SnackbarHostState) {
     var email by rememberSaveable { mutableStateOf("") }
     var code by rememberSaveable { mutableStateOf("") }
     var codeSent by rememberSaveable { mutableStateOf(false) }
-    val emailValid = remember(email) { Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}$").matches(email.trim()) }
+    val emailValid = remember(email) { EMAIL_REGEX.matches(email.trim()) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -386,14 +394,14 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            "Echobell",
+                            stringResource(R.string.app_name),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Instant Alerts for Critical Events.",
+                            stringResource(R.string.auth_tagline),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium
@@ -405,12 +413,12 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         if (!codeSent) {
-                            AuthFormLabel("Continue with Email")
+                            AuthFormLabel(stringResource(R.string.auth_continue_with_email))
                             Spacer(Modifier.height(16.dp))
                             AppTextField(
                                 value = email,
                                 onValueChange = { email = it },
-                                label = "Email address",
+                                label = stringResource(R.string.auth_email_label),
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Email,
                                     imeAction = ImeAction.Done
@@ -430,7 +438,7 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                             if (email.isNotEmpty() && !emailValid) {
                                 Spacer(Modifier.height(4.dp))
                                 Text(
-                                    "Please enter a valid email address",
+                                    stringResource(R.string.auth_email_invalid),
                                     color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodySmall
                                 )
@@ -447,17 +455,17 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                             ) {
                                 Icon(Icons.Default.Email, contentDescription = null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Send Code")
+                                Text(stringResource(R.string.auth_send_code))
                             }
                         } else {
-                            AuthFormLabel("Enter Verification Code")
+                            AuthFormLabel(stringResource(R.string.auth_enter_code_title))
                             Spacer(Modifier.height(4.dp))
-                            Text("A 6-digit code was sent to $email.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.auth_code_sent_to_fmt, email), color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.height(16.dp))
                             AppTextField(
                                 value = code,
                                 onValueChange = { code = it.filter(Char::isDigit).take(6) },
-                                label = "Verification code",
+                                label = stringResource(R.string.auth_code_label),
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Number,
                                     imeAction = ImeAction.Done
@@ -486,14 +494,14 @@ private fun AuthScreen(state: AppUiState, viewModel: EchobellViewModel, snackbar
                             ) {
                                 Icon(Icons.Default.Check, contentDescription = null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Sign In")
+                                Text(stringResource(R.string.auth_sign_in))
                             }
                             Spacer(Modifier.height(8.dp))
                             TextButton(
                                 onClick = { codeSent = false; code = "" },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Use another email")
+                                Text(stringResource(R.string.auth_use_another_email))
                             }
                         }
                     }
@@ -521,11 +529,12 @@ private fun BottomNav(navController: NavHostController) {
         tonalElevation = 0.dp,
     ) {
         listOf(
-            Triple(Routes.Records, Icons.Default.Notifications, "Records"),
-            Triple(Routes.Channels, Icons.Default.Link, "Channels"),
-            Triple(Routes.Direct, Icons.Default.Key, "Direct"),
-            Triple(Routes.Settings, Icons.Default.Settings, "Settings"),
-        ).forEach { (route, icon, label) ->
+            Triple(Routes.Records, Icons.Default.Notifications, R.string.nav_records),
+            Triple(Routes.Channels, Icons.Default.Link, R.string.nav_channels),
+            Triple(Routes.Direct, Icons.Default.Key, R.string.nav_direct),
+            Triple(Routes.Settings, Icons.Default.Settings, R.string.nav_settings),
+        ).forEach { (route, icon, labelRes) ->
+            val label = stringResource(labelRes)
             NavigationBarItem(
                 selected = currentRoute == route,
                 onClick = { navController.navigateTopLevel(route) },
@@ -567,21 +576,21 @@ private fun RecordsScreen(
     var expandedRecordId by rememberSaveable { mutableStateOf<String?>(null) }
 
     ScreenScaffold(
-        title = "Echobell",
+        title = stringResource(R.string.app_name),
         actions = {
             IconButton(onClick = { navController.navigate(Routes.Announcements) }) {
-                Icon(Icons.Default.Campaign, contentDescription = "Announcements")
+                Icon(Icons.Default.Campaign, contentDescription = stringResource(R.string.announcements_title))
             }
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Inbox actions")
+                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.records_inbox_actions))
                 }
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Mark All as Read") },
+                        text = { Text(stringResource(R.string.records_mark_all_read)) },
                         onClick = {
                             menuExpanded = false
                             viewModel.markAllRecordsRead()
@@ -589,7 +598,7 @@ private fun RecordsScreen(
                         leadingIcon = { Icon(Icons.Default.Check, contentDescription = null) }
                     )
                     DropdownMenuItem(
-                        text = { Text("Clear All", color = MaterialTheme.colorScheme.error) },
+                        text = { Text(stringResource(R.string.records_clear_all), color = MaterialTheme.colorScheme.error) },
                         onClick = {
                             menuExpanded = false
                             showClearConfirm = true
@@ -602,9 +611,9 @@ private fun RecordsScreen(
     ) { padding ->
         if (showClearConfirm) {
             ConfirmDialog(
-                title = "Clear All Notifications",
-                text = "This will delete all notification records from this device. This action cannot be undone.",
-                confirm = "Clear All",
+                title = stringResource(R.string.records_clear_all_title),
+                text = stringResource(R.string.records_clear_all_message),
+                confirm = stringResource(R.string.records_clear_all),
                 onDismiss = { showClearConfirm = false },
                 onConfirm = {
                     showClearConfirm = false
@@ -612,17 +621,21 @@ private fun RecordsScreen(
                 }
             )
         }
-        val grouped = state.records
-            .sortedByDescending { it.createdAt }
-            .groupBy { dayKey(it.createdAt) }
+        val grouped = remember(state.records) {
+            state.records
+                .sortedByDescending { it.createdAt }
+                .groupBy { dayKey(it.createdAt) }
+        }
+        val latestUnread = remember(state.announcements, state.readAnnouncementIds) {
+            state.announcements
+                .filterNot { it.id in state.readAnnouncementIds }
+                .maxWithOrNull(compareBy<Announcement> { levelPriority(it.level) }.thenBy { maxOf(it.startsAt, it.updatedAt) })
+        }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = padding.plus(PaddingValues(16.dp)),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            val latestUnread = state.announcements
-                .filterNot { it.id in state.readAnnouncementIds }
-                .maxWithOrNull(compareBy<Announcement> { levelPriority(it.level) }.thenBy { maxOf(it.startsAt, it.updatedAt) })
             if (latestUnread != null) {
                 item {
                     AnnouncementPreview(latestUnread) {
@@ -643,8 +656,8 @@ private fun RecordsScreen(
                 item {
                     EmptyState(
                         icon = Icons.Default.Notifications,
-                        title = "No Records Yet",
-                        description = "Notifications you receive through channels or direct webhooks will appear here.",
+                        title = stringResource(R.string.records_empty_title),
+                        description = stringResource(R.string.records_empty_description),
                     )
                 }
             }
@@ -764,7 +777,7 @@ private fun RecordCard(
                     .background(channel?.let { parseColor(it.colorHex) } ?: MaterialTheme.colorScheme.tertiary),
             )
             Text(
-                channel?.name ?: record.directKeyName ?: "Notification",
+                channel?.name ?: record.directKeyName ?: stringResource(R.string.record_fallback_title),
                 modifier = Modifier.weight(1f),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.labelMedium,
@@ -804,20 +817,20 @@ private fun RecordCard(
                     TextButton(onClick = { context.openUrl(link) }) {
                         Icon(Icons.Default.Info, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("Source")
+                        Text(stringResource(R.string.record_source))
                     }
                 }
                 record.externalLink?.takeIf { it.isNotBlank() }?.let { link ->
                     TextButton(onClick = { context.openUrl(link) }) {
                         Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("External")
+                        Text(stringResource(R.string.record_external))
                     }
                 }
                 TextButton(onClick = onMarkUnread, enabled = record.checked) {
                     Icon(Icons.Default.VisibilityOff, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
-                    Text("Mark Unread")
+                    Text(stringResource(R.string.record_mark_unread))
                 }
             }
         }
@@ -831,15 +844,15 @@ private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navC
     var showIntro by rememberSaveable { mutableStateOf(true) }
 
     ScreenScaffold(
-        title = "Channels",
+        title = stringResource(R.string.nav_channels),
         actions = {
             IconButton(onClick = { uriHandler.openUri("https://echobell.one/en/docs/template") }) {
-                Icon(Icons.AutoMirrored.Filled.Help, contentDescription = "Documentation")
+                Icon(Icons.AutoMirrored.Filled.Help, contentDescription = stringResource(R.string.channels_documentation))
             }
             IconButton(onClick = {
                 if (state.canCreateOrSubscribeChannel) navController.navigate(Routes.ChannelNew) else navController.navigate(Routes.Paywall)
             }) {
-                Icon(Icons.Default.Add, contentDescription = "New channel")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.channels_new))
             }
         },
     ) { padding ->
@@ -863,11 +876,11 @@ private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navC
                             )
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text("Channels", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                Text("Subscribe to channels to receive group alerts and topic notifications.", color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                                Text(stringResource(R.string.nav_channels), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text(stringResource(R.string.channels_intro_description), color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
                             }
                             IconButton(onClick = { showIntro = false }) {
-                                Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                             }
                         }
                     }
@@ -875,7 +888,7 @@ private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navC
             }
             if (state.channels.isEmpty()) {
                 item {
-                    EmptyState(Icons.Default.Link, "No Channels", "Create or subscribe to a channel to start receiving notifications.")
+                    EmptyState(Icons.Default.Link, stringResource(R.string.channels_empty_title), stringResource(R.string.channels_empty_description))
                 }
             }
             items(state.channels, key = { it.remoteId }) { channel ->
@@ -883,7 +896,7 @@ private fun ChannelsScreen(state: AppUiState, viewModel: EchobellViewModel, navC
             }
             if (!state.canCreateOrSubscribeChannel) {
                 item {
-                    LimitBanner("Free users can keep up to $FREE_USER_CHANNEL_LIMIT active channels.") {
+                    LimitBanner(pluralStringResource(R.plurals.channels_limit_banner, FREE_USER_CHANNEL_LIMIT, FREE_USER_CHANNEL_LIMIT)) {
                         navController.navigate(Routes.Paywall)
                     }
                 }
@@ -913,7 +926,11 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
                 Text(channel.bodyTemplate, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(channel.lastTriggeredAt?.let { "Last: ${formatDateTime(it)}" } ?: "Never triggered", style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        channel.lastTriggeredAt?.let { stringResource(R.string.channel_last_triggered_fmt, formatDateTime(it)) }
+                            ?: stringResource(R.string.channel_never_triggered),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
                     Spacer(Modifier.weight(1f))
                     StatusChip(channel)
                 }
@@ -926,22 +943,22 @@ private fun ChannelCard(channel: Channel, onClick: () -> Unit) {
 private fun StatusChip(channel: Channel) {
     val (label, containerColor, textColor) = when {
         channel.detached -> Triple(
-            "Inactive",
+            stringResource(R.string.channel_status_inactive),
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
             MaterialTheme.colorScheme.onSurfaceVariant
         )
         channel.isAdmin -> Triple(
-            "Managed",
+            stringResource(R.string.channel_status_managed),
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.colorScheme.onTertiaryContainer
         )
         channel.subscribedAt != null -> Triple(
-            "Subscribed",
+            stringResource(R.string.channel_status_subscribed),
             MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.onPrimaryContainer
         )
         else -> Triple(
-            "Available",
+            stringResource(R.string.channel_status_available),
             MaterialTheme.colorScheme.secondaryContainer,
             MaterialTheme.colorScheme.onSecondaryContainer
         )
@@ -966,7 +983,9 @@ private fun ChannelDetailScreen(
     channel: Channel,
 ) {
     val context = LocalContext.current
-    val records = state.records.filter { it.channelId == channel.remoteId }.sortedByDescending { it.createdAt }
+    val records = remember(state.records, channel.remoteId) {
+        state.records.filter { it.channelId == channel.remoteId }.sortedByDescending { it.createdAt }
+    }
     var deleteDialog by rememberSaveable { mutableStateOf(false) }
     var unsubscribeDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -976,7 +995,7 @@ private fun ChannelDetailScreen(
         actions = {
             if (channel.isAdmin && !channel.detached) {
                 IconButton(onClick = { navController.navigate(Routes.editChannel(channel.remoteId)) }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit))
                 }
             }
         },
@@ -1016,31 +1035,31 @@ private fun ChannelDetailScreen(
             if (channel.isAdmin && !channel.detached) {
                 item {
                     TokenPanel(
-                        title = "Trigger",
+                        title = stringResource(R.string.channel_trigger),
                         token = channel.triggerToken.orEmpty(),
-                        primaryActionLabel = "Webhook",
+                        primaryActionLabel = stringResource(R.string.channel_webhook),
                         primaryValue = "${BuildConfig.HOOK_BASE_URL}/t/${channel.triggerToken.orEmpty()}",
-                        secondaryActionLabel = "Email",
+                        secondaryActionLabel = stringResource(R.string.channel_email),
                         secondaryValue = "${channel.triggerToken.orEmpty()}@${BuildConfig.EMAIL_TRIGGER_DOMAIN}",
                         onReset = { viewModel.resetTriggerToken(channel.remoteId) },
                         onCopy = { label, value ->
                             context.copyToClipboard(label, value)
-                            viewModel.showMessage("$label copied.")
+                            viewModel.showMessage(R.string.copied_fmt, label)
                         },
                     )
                 }
                 item {
                     TokenPanel(
-                        title = "Subscription Link",
+                        title = stringResource(R.string.channel_subscription_link),
                         token = channel.subscriptionToken.orEmpty(),
-                        primaryActionLabel = "Link",
+                        primaryActionLabel = stringResource(R.string.channel_link),
                         primaryValue = "https://echobell.one/subscription/${channel.subscriptionToken.orEmpty()}",
                         secondaryActionLabel = null,
                         secondaryValue = null,
                         onReset = { viewModel.resetSubscriptionToken(channel.remoteId) },
                         onCopy = { label, value ->
                             context.copyToClipboard(label, value)
-                            viewModel.showMessage("$label copied.")
+                            viewModel.showMessage(R.string.copied_fmt, label)
                         },
                     )
                 }
@@ -1050,10 +1069,10 @@ private fun ChannelDetailScreen(
                 item {
                     AppCard {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Notification", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.channel_notification_section), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                             if (channel.subscribedAt != null) {
                                 TextButton(onClick = { unsubscribeDialog = true }) {
-                                    Text("Unsubscribe", color = MaterialTheme.colorScheme.error)
+                                    Text(stringResource(R.string.action_unsubscribe), color = MaterialTheme.colorScheme.error)
                                 }
                             }
                         }
@@ -1065,10 +1084,10 @@ private fun ChannelDetailScreen(
                                 onSelected = { viewModel.updateNotificationType(channel.remoteId, it) },
                             )
                         } else if (channel.subscriptionToken != null) {
-                            Text("Subscribe to this channel on this Android device to receive notifications.")
+                            Text(stringResource(R.string.channel_subscribe_prompt))
                             Spacer(Modifier.height(10.dp))
                             Button(onClick = { viewModel.subscribeToChannel(channel.subscriptionToken, NotificationType.Active) }) {
-                                Text("Subscribe")
+                                Text(stringResource(R.string.action_subscribe))
                             }
                         }
                     }
@@ -1077,7 +1096,7 @@ private fun ChannelDetailScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Notification Templates")
+                    SectionTitle(stringResource(R.string.channel_templates_section))
                     AppCard {
                         Text(channel.titleTemplate, fontWeight = FontWeight.SemiBold)
                         HorizontalDivider(
@@ -1092,7 +1111,7 @@ private fun ChannelDetailScreen(
             if (channel.isAdmin && !channel.conditions.isNullOrBlank()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SectionTitle("Conditions")
+                        SectionTitle(stringResource(R.string.channel_conditions_section))
                         AppCard { Text(channel.conditions.orEmpty()) }
                     }
                 }
@@ -1100,7 +1119,7 @@ private fun ChannelDetailScreen(
             if (channel.isAdmin && !channel.externalLinkTemplate.isNullOrBlank()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SectionTitle("Link Template")
+                        SectionTitle(stringResource(R.string.channel_link_template_section))
                         AppCard { Text(channel.externalLinkTemplate.orEmpty()) }
                     }
                 }
@@ -1113,9 +1132,9 @@ private fun ChannelDetailScreen(
                             .fillMaxWidth()
                             .padding(top = 10.dp, bottom = 4.dp)
                     ) {
-                        SectionTitle("Recent Records", Modifier.weight(1f))
+                        SectionTitle(stringResource(R.string.channel_recent_records), Modifier.weight(1f))
                         TextButton(onClick = { viewModel.clearRecordsForChannel(channel.remoteId) }) {
-                            Text("Delete All", color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.delete_all), color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -1137,7 +1156,7 @@ private fun ChannelDetailScreen(
                     ) {
                         Icon(Icons.Default.Person, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Manage Subscribers")
+                        Text(stringResource(R.string.channel_manage_subscribers))
                     }
                 }
             }
@@ -1150,7 +1169,7 @@ private fun ChannelDetailScreen(
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.width(8.dp))
-                        Text("Delete Channel", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.channel_delete_title), color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -1159,9 +1178,9 @@ private fun ChannelDetailScreen(
 
     if (deleteDialog) {
         ConfirmDialog(
-            title = "Delete Channel",
-            text = "This action cannot be undone.",
-            confirm = "Delete",
+            title = stringResource(R.string.channel_delete_title),
+            text = stringResource(R.string.action_cannot_be_undone),
+            confirm = stringResource(R.string.action_delete),
             onDismiss = { deleteDialog = false },
             onConfirm = {
                 deleteDialog = false
@@ -1171,9 +1190,9 @@ private fun ChannelDetailScreen(
     }
     if (unsubscribeDialog) {
         ConfirmDialog(
-            title = "Unsubscribe",
-            text = "You will no longer receive notifications from this channel.",
-            confirm = "Unsubscribe",
+            title = stringResource(R.string.action_unsubscribe),
+            text = stringResource(R.string.channel_unsubscribe_message),
+            confirm = stringResource(R.string.action_unsubscribe),
             onDismiss = { unsubscribeDialog = false },
             onConfirm = {
                 unsubscribeDialog = false
@@ -1222,7 +1241,7 @@ private fun TokenPanel(
                 Spacer(Modifier.width(8.dp))
                 Icon(
                     imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = if (visible) "Hide" else "Show",
+                    contentDescription = if (visible) stringResource(R.string.action_hide) else stringResource(R.string.action_show),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp)
                 )
@@ -1241,7 +1260,7 @@ private fun TokenPanel(
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.action_reset),
                     modifier = Modifier.size(16.dp)
                 )
             }
@@ -1299,7 +1318,7 @@ private fun ChannelFormScreen(
     var hasAttemptedSave by rememberSaveable { mutableStateOf(false) }
 
     ScreenScaffold(
-        title = if (channel == null) "New Channel" else "Edit Channel",
+        title = if (channel == null) stringResource(R.string.channel_form_new_title) else stringResource(R.string.channel_form_edit_title),
         navigationIcon = { BackOrEmpty(navController) },
         actions = {
             IconButton(
@@ -1335,7 +1354,7 @@ private fun ChannelFormScreen(
             ) {
                 Icon(
                     Icons.Default.Check,
-                    contentDescription = "Save",
+                    contentDescription = stringResource(R.string.action_save),
                     tint = if (valid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 )
             }
@@ -1362,7 +1381,7 @@ private fun ChannelFormScreen(
                     AppTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = "Channel name *",
+                        label = stringResource(R.string.channel_form_name_label),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
@@ -1370,13 +1389,13 @@ private fun ChannelFormScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     if (hasAttemptedSave && name.isBlank()) {
-                        Text("Channel name is required", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.channel_form_name_required), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Color")
+                    SectionTitle(stringResource(R.string.channel_form_color))
                     AppCard {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             DEFAULT_COLORS.forEach { color ->
@@ -1397,7 +1416,7 @@ private fun ChannelFormScreen(
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Notification Templates")
+                    SectionTitle(stringResource(R.string.channel_templates_section))
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -1405,8 +1424,8 @@ private fun ChannelFormScreen(
                         AppTextField(
                             value = titleTemplate,
                             onValueChange = { titleTemplate = it },
-                            label = "Title template",
-                            placeholder = "Defaults to channel name",
+                            label = stringResource(R.string.channel_form_title_template),
+                            placeholder = stringResource(R.string.channel_form_title_placeholder),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
@@ -1415,7 +1434,7 @@ private fun ChannelFormScreen(
                         AppTextField(
                             value = bodyTemplate,
                             onValueChange = { bodyTemplate = it },
-                            label = "Body template *",
+                            label = stringResource(R.string.channel_form_body_template),
                             minLines = 3,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
@@ -1423,14 +1442,14 @@ private fun ChannelFormScreen(
                             modifier = Modifier.fillMaxWidth(),
                         )
                         if (hasAttemptedSave && bodyTemplate.isBlank()) {
-                            Text("Body template is required", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.channel_form_body_required), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Advanced Settings")
+                    SectionTitle(stringResource(R.string.channel_form_advanced))
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -1438,7 +1457,7 @@ private fun ChannelFormScreen(
                         AppTextField(
                             value = conditions,
                             onValueChange = { conditions = it },
-                            label = "Conditions",
+                            label = stringResource(R.string.channel_form_conditions),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                             modifier = Modifier.fillMaxWidth()
@@ -1446,7 +1465,7 @@ private fun ChannelFormScreen(
                         AppTextField(
                             value = externalLinkTemplate,
                             onValueChange = { externalLinkTemplate = it },
-                            label = "Link template",
+                            label = stringResource(R.string.channel_form_link_template),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                             modifier = Modifier.fillMaxWidth()
@@ -1454,7 +1473,7 @@ private fun ChannelFormScreen(
                         AppTextField(
                             value = note,
                             onValueChange = { note = it },
-                            label = "Note",
+                            label = stringResource(R.string.channel_form_note),
                             minLines = 2,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
@@ -1466,12 +1485,12 @@ private fun ChannelFormScreen(
             if (channel == null) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SectionTitle("Subscription")
+                        SectionTitle(stringResource(R.string.channel_form_subscription))
                         AppCard {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
-                                    Text("Subscribe after creation")
-                                    Text("This device will receive notifications immediately.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(stringResource(R.string.channel_form_auto_subscribe))
+                                    Text(stringResource(R.string.channel_form_auto_subscribe_description), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 Switch(checked = autoSubscribe, onCheckedChange = { autoSubscribe = it })
                             }
@@ -1512,7 +1531,7 @@ private fun SubscribeScreen(
     }
 
     ScreenScaffold(
-        title = "Subscribe Channel",
+        title = stringResource(R.string.subscribe_title),
         navigationIcon = { BackOrEmpty(navController) },
     ) { padding ->
         LazyColumn(
@@ -1523,13 +1542,13 @@ private fun SubscribeScreen(
             item {
                 AppCard {
                     if (channelInfo == null) {
-                        Text("Enter a subscription link or token.", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.subscribe_prompt), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
                         val isInvalidToken = remember(input, token) { input.isNotEmpty() && token == null }
                         AppTextField(
                             value = input,
                             onValueChange = { input = it; channelInfo = null },
-                            label = "Subscription link",
+                            label = stringResource(R.string.subscribe_link_label),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                             keyboardActions = KeyboardActions(
@@ -1543,7 +1562,7 @@ private fun SubscribeScreen(
                         if (isInvalidToken) {
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                "Please enter a valid subscription token or link",
+                                stringResource(R.string.subscribe_invalid_token),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -1557,7 +1576,7 @@ private fun SubscribeScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Get Information")
+                            Text(stringResource(R.string.subscribe_get_info))
                         }
                     } else {
                         val info = channelInfo!!
@@ -1581,14 +1600,14 @@ private fun SubscribeScreen(
                                 }
                             },
                         ) {
-                            Text("Subscribe")
+                            Text(stringResource(R.string.action_subscribe))
                         }
                     }
                 }
             }
             if (!state.canCreateOrSubscribeChannel) {
                 item {
-                    LimitBanner("Free users can keep up to $FREE_USER_CHANNEL_LIMIT active channels.") {
+                    LimitBanner(pluralStringResource(R.plurals.channels_limit_banner, FREE_USER_CHANNEL_LIMIT, FREE_USER_CHANNEL_LIMIT)) {
                         navController.navigate(Routes.Paywall)
                     }
                 }
@@ -1610,7 +1629,12 @@ private fun ChannelPreview(channel: ApiChannel) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Row {
-                Text(channel.name.ifBlank { "Channel #${channel.id}" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text(
+                    channel.name.ifBlank { stringResource(R.string.channel_number_fmt, channel.id) },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                )
                 Text("#${channel.id}", style = MaterialTheme.typography.labelSmall)
             }
             Text(channel.titleTemplate, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -1628,15 +1652,15 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
     var keyName by rememberSaveable { mutableStateOf("") }
 
     ScreenScaffold(
-        title = "Direct",
+        title = stringResource(R.string.nav_direct),
         actions = {
             IconButton(onClick = { uriHandler.openUri("https://echobell.one/en/docs/direct") }) {
-                Icon(Icons.AutoMirrored.Filled.Help, contentDescription = "Documentation")
+                Icon(Icons.AutoMirrored.Filled.Help, contentDescription = stringResource(R.string.channels_documentation))
             }
             IconButton(onClick = {
                 if (state.canCreateDirectKey) newKeyDialog = true else navController.navigate(Routes.Paywall)
             }) {
-                Icon(Icons.Default.Add, contentDescription = "Create direct key")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.direct_new_key))
             }
         },
     ) { padding ->
@@ -1660,11 +1684,11 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
                             )
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text("Direct Webhooks", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                Text("Send notifications directly using direct keys and simple HTTP requests.", color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                                Text(stringResource(R.string.direct_intro_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text(stringResource(R.string.direct_intro_description), color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
                             }
                             IconButton(onClick = { showIntro = false }) {
-                                Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                             }
                         }
                     }
@@ -1672,7 +1696,7 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
             }
             if (state.directKeys.isEmpty()) {
                 item {
-                    EmptyState(Icons.Default.Key, "No Direct Keys", "Create a direct key to send notifications directly.")
+                    EmptyState(Icons.Default.Key, stringResource(R.string.direct_empty_title), stringResource(R.string.direct_empty_description))
                 }
             }
             items(state.directKeys, key = { it.remoteId }) { directKey ->
@@ -1680,7 +1704,7 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
             }
             if (!state.canCreateDirectKey) {
                 item {
-                    LimitBanner("Free users can create up to $FREE_USER_DIRECT_KEY_LIMIT direct keys.") {
+                    LimitBanner(pluralStringResource(R.plurals.direct_limit_banner, FREE_USER_DIRECT_KEY_LIMIT, FREE_USER_DIRECT_KEY_LIMIT)) {
                         navController.navigate(Routes.Paywall)
                     }
                 }
@@ -1691,12 +1715,12 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
     if (newKeyDialog) {
         AlertDialog(
             onDismissRequest = { newKeyDialog = false },
-            title = { Text("New Direct Key") },
+            title = { Text(stringResource(R.string.direct_new_key_title)) },
             text = {
                 AppTextField(
                     value = keyName,
                     onValueChange = { keyName = it },
-                    label = "Key name",
+                    label = stringResource(R.string.direct_key_name_label),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(
@@ -1720,11 +1744,11 @@ private fun DirectKeysScreen(state: AppUiState, viewModel: EchobellViewModel, na
                         newKeyDialog = false
                     },
                 ) {
-                    Text("Create")
+                    Text(stringResource(R.string.action_create))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { newKeyDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { newKeyDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }
@@ -1738,6 +1762,7 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
     var resetDialog by rememberSaveable { mutableStateOf(false) }
     var clearDialog by rememberSaveable { mutableStateOf(false) }
     val webhook = "${BuildConfig.HOOK_BASE_URL}/d/${directKey.token}"
+    val webhookLabel = stringResource(R.string.channel_webhook)
 
     AppCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1749,7 +1774,7 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
             )
             Spacer(Modifier.width(12.dp))
             Text(directKey.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            Text("Key", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.direct_key_label), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 10.dp),
@@ -1780,7 +1805,7 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
                 Spacer(Modifier.width(8.dp))
                 Icon(
                     imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = if (visible) "Hide" else "Show",
+                    contentDescription = if (visible) stringResource(R.string.action_hide) else stringResource(R.string.action_show),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp)
                 )
@@ -1796,12 +1821,12 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
                 onClick = { resetDialog = true },
                 border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = "Reset")
+                Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.action_reset))
             }
             Button(
                 onClick = {
-                    context.copyToClipboard("Webhook", webhook)
-                    viewModel.showMessage("Webhook copied.")
+                    context.copyToClipboard(webhookLabel, webhook)
+                    viewModel.showMessage(R.string.copied_fmt, webhookLabel)
                 },
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 modifier = Modifier.weight(1f)
@@ -1812,13 +1837,13 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-                Text("Webhook", maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium)
+                Text(webhookLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium)
             }
             OutlinedIconButton(
                 onClick = { clearDialog = true },
                 border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             ) {
-                Icon(Icons.Default.VisibilityOff, contentDescription = "Clear records")
+                Icon(Icons.Default.VisibilityOff, contentDescription = stringResource(R.string.direct_clear_records))
             }
             OutlinedIconButton(
                 onClick = { deleteDialog = true },
@@ -1827,25 +1852,40 @@ private fun DirectKeyCard(directKey: DirectKey, viewModel: EchobellViewModel) {
                     contentColor = MaterialTheme.colorScheme.error
                 )
             ) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete))
             }
         }
     }
 
     if (resetDialog) {
-        ConfirmDialog("Reset Token", "The current webhook URL will stop working.", "Reset", { resetDialog = false }) {
+        ConfirmDialog(
+            stringResource(R.string.direct_reset_token_title),
+            stringResource(R.string.direct_reset_token_message),
+            stringResource(R.string.action_reset),
+            { resetDialog = false },
+        ) {
             resetDialog = false
             viewModel.resetDirectKeyToken(directKey.remoteId)
         }
     }
     if (clearDialog) {
-        ConfirmDialog("Clear Records", "All records for this direct key will be removed.", "Clear", { clearDialog = false }) {
+        ConfirmDialog(
+            stringResource(R.string.direct_clear_records_title),
+            stringResource(R.string.direct_clear_records_message),
+            stringResource(R.string.direct_clear_records_title),
+            { clearDialog = false },
+        ) {
             clearDialog = false
             viewModel.clearRecordsForDirectKey(directKey.remoteId)
         }
     }
     if (deleteDialog) {
-        ConfirmDialog("Delete Direct Key", "This action cannot be undone.", "Delete", { deleteDialog = false }) {
+        ConfirmDialog(
+            stringResource(R.string.direct_delete_title),
+            stringResource(R.string.action_cannot_be_undone),
+            stringResource(R.string.action_delete),
+            { deleteDialog = false },
+        ) {
             deleteDialog = false
             viewModel.deleteDirectKey(directKey.remoteId)
         }
@@ -1863,10 +1903,10 @@ private fun SettingsScreen(
 ) {
     val context = LocalContext.current
     ScreenScaffold(
-        title = "Settings",
+        title = stringResource(R.string.nav_settings),
         actions = {
             IconButton(onClick = { navController.navigate(Routes.Announcements) }) {
-                Icon(Icons.Default.Campaign, contentDescription = "Announcements")
+                Icon(Icons.Default.Campaign, contentDescription = stringResource(R.string.announcements_title))
             }
         },
     ) { padding ->
@@ -1883,44 +1923,52 @@ private fun SettingsScreen(
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Account")
+                    SectionTitle(stringResource(R.string.settings_account))
                     AppCard {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Person, contentDescription = null)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text("Hello, ${state.user?.name ?: "User"}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    stringResource(R.string.settings_hello_fmt, state.user?.name ?: stringResource(R.string.settings_default_user)),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
                                 Text(state.user?.email ?: "#${state.user?.id ?: 0}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             IconButton(onClick = { navController.navigate(Routes.User) }) {
-                                Icon(Icons.Default.Settings, contentDescription = "User settings")
+                                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_user_settings))
                             }
                         }
-                        Text("Channel and subscription data are stored on Echobell servers. Notification records stay on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.settings_data_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
             item {
-                SettingsAction(Icons.Default.Info, "User Guide") {
+                SettingsAction(Icons.Default.Info, stringResource(R.string.settings_user_guide)) {
                     context.openUrl("https://echobell.one/docs")
                 }
             }
             item {
-                SettingsAction(Icons.Default.Person, "Invite Friends", trailing = if (state.user?.canSubmitInviteCode() == true) "Bonus Available" else null) {
+                SettingsAction(
+                    Icons.Default.Person,
+                    stringResource(R.string.settings_invite_friends),
+                    trailing = if (state.user?.canSubmitInviteCode() == true) stringResource(R.string.settings_bonus_available) else null,
+                ) {
                     navController.navigate(Routes.Invite)
                 }
             }
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Support")
+                    SectionTitle(stringResource(R.string.settings_support))
                     AppCard {
-                        SupportLink("Email Support", "mailto:echobell@weelone.com")
-                        SupportLink("X (Twitter)", "https://x.com/EchobellApp")
-                        SupportLink("Discord Group", "https://discord.gg/s4JqfrgccJ")
-                        SupportLink("Telegram Group", "https://t.me/EchobellApp")
-                        SupportLink("Privacy Policy", "https://echobell.one/privacy")
-                        SupportLink("Terms of Service", "https://echobell.one/terms")
+                        SupportLink(stringResource(R.string.support_email), "mailto:echobell@weelone.com")
+                        SupportLink(stringResource(R.string.support_x), "https://x.com/EchobellApp")
+                        SupportLink(stringResource(R.string.support_discord), "https://discord.gg/s4JqfrgccJ")
+                        SupportLink(stringResource(R.string.support_telegram), "https://t.me/EchobellApp")
+                        SupportLink(stringResource(R.string.support_privacy), "https://echobell.one/privacy")
+                        SupportLink(stringResource(R.string.support_terms), "https://echobell.one/terms")
                     }
                 }
             }
@@ -1940,11 +1988,11 @@ private fun SubscriptionBanner(state: AppUiState, navController: NavHostControll
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 if (state.premiumActive) {
-                    Text("Premium Active", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text("Until ${formatDate(state.user?.premiumExpiresAt ?: 0)}")
+                    Text(stringResource(R.string.premium_active), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.premium_until_fmt, formatDate(state.user?.premiumExpiresAt ?: 0)))
                 } else {
-                    Text("Echobell Premium", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text("Unlock unlimited channels, direct keys, and call notifications.")
+                    Text(stringResource(R.string.premium_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.premium_pitch))
                 }
             }
         }
@@ -1998,7 +2046,7 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
     val hasManagedChannels = state.channels.any { it.isAdmin && !it.detached }
 
     ScreenScaffold(
-        title = "User Settings",
+        title = stringResource(R.string.user_settings_title),
         navigationIcon = { BackOrEmpty(navController) },
     ) { padding ->
         LazyColumn(
@@ -2008,11 +2056,15 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
         ) {
             item {
                 AppCard {
-                    Text("Welcome, ${state.user?.name ?: "User"}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.user_welcome_fmt, state.user?.name ?: stringResource(R.string.settings_default_user)),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
                     Spacer(Modifier.height(12.dp))
-                    InfoRow("User ID", "#${state.user?.id ?: 0}")
-                    state.user?.email?.let { InfoRow("Email", it) }
-                    state.user?.premiumExpiresAt?.takeIf { state.premiumActive }?.let { InfoRow("Premium until", formatDate(it)) }
+                    InfoRow(stringResource(R.string.user_id), "#${state.user?.id ?: 0}")
+                    state.user?.email?.let { InfoRow(stringResource(R.string.user_email), it) }
+                    state.user?.premiumExpiresAt?.takeIf { state.premiumActive }?.let { InfoRow(stringResource(R.string.user_premium_until), formatDate(it)) }
                 }
             }
             item {
@@ -2023,7 +2075,7 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Edit Name")
+                    Text(stringResource(R.string.user_edit_name))
                 }
             }
             item {
@@ -2034,7 +2086,7 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
                 ) {
                     Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(8.dp))
-                    Text("Sign Out", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.user_sign_out), color = MaterialTheme.colorScheme.error)
                 }
             }
             item {
@@ -2046,10 +2098,10 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(8.dp))
-                    Text("Delete Account", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.user_delete_account), color = MaterialTheme.colorScheme.error)
                 }
                 if (hasManagedChannels) {
-                    Text("Delete managed channels before requesting account deletion.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.user_delete_blocked), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -2058,25 +2110,35 @@ private fun UserSettingsScreen(state: AppUiState, viewModel: EchobellViewModel, 
     if (renameDialog) {
         AlertDialog(
             onDismissRequest = { renameDialog = false },
-            title = { Text("Edit Name") },
-            text = { AppTextField(value = name, onValueChange = { name = it }, label = "New name", modifier = Modifier.fillMaxWidth()) },
+            title = { Text(stringResource(R.string.user_edit_name)) },
+            text = { AppTextField(value = name, onValueChange = { name = it }, label = stringResource(R.string.user_new_name), modifier = Modifier.fillMaxWidth()) },
             confirmButton = {
                 TextButton(onClick = {
                     renameDialog = false
                     viewModel.rename(name)
-                }) { Text("Save") }
+                }) { Text(stringResource(R.string.action_save)) }
             },
-            dismissButton = { TextButton(onClick = { renameDialog = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { renameDialog = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
     if (signOutDialog) {
-        ConfirmDialog("Sign Out", "You will need to sign in again to access your account.", "Sign Out", { signOutDialog = false }) {
+        ConfirmDialog(
+            stringResource(R.string.user_sign_out),
+            stringResource(R.string.user_sign_out_message),
+            stringResource(R.string.user_sign_out),
+            { signOutDialog = false },
+        ) {
             signOutDialog = false
             viewModel.signOut()
         }
     }
     if (deleteDialog) {
-        ConfirmDialog("Delete Account", "Echobell will email you to confirm deletion.", "Request Deletion", { deleteDialog = false }) {
+        ConfirmDialog(
+            stringResource(R.string.user_delete_account),
+            stringResource(R.string.user_delete_message),
+            stringResource(R.string.user_request_deletion),
+            { deleteDialog = false },
+        ) {
             deleteDialog = false
             viewModel.requestAccountDeletion()
         }
@@ -2093,7 +2155,7 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
     val context = LocalContext.current
 
     ScreenScaffold(
-        title = "Invite Friends",
+        title = stringResource(R.string.settings_invite_friends),
         navigationIcon = { BackOrEmpty(navController) },
     ) { padding ->
         LazyColumn(
@@ -2103,40 +2165,42 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
         ) {
             item {
                 AppCard {
-                    Text("Points Balance", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.invite_points_balance), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
                         Spacer(Modifier.width(8.dp))
                         Text("${user?.pointsBalance ?: 0}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.width(8.dp))
-                        Text("points")
+                        Text(stringResource(R.string.invite_points))
                     }
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(onClick = { redeemDialog = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Redeem Points")
+                        Text(stringResource(R.string.invite_redeem))
                     }
                 }
             }
             item {
                 AppCard {
-                    Text("Your Invite Code", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.invite_your_code), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (user?.inviteCode.isNullOrBlank()) {
                         Spacer(Modifier.height(10.dp))
                         Button(onClick = { viewModel.generateInviteCode() }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Generate Invite Code")
+                            Text(stringResource(R.string.invite_generate))
                         }
                     } else {
+                        val clipLabel = stringResource(R.string.invite_code_clip_label)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(user!!.inviteCode!!, style = MaterialTheme.typography.headlineSmall, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             IconButton(onClick = {
-                                context.copyToClipboard("Invite Code", user.inviteCode)
-                                viewModel.showMessage("Invite code copied.")
-                            }) { Icon(Icons.Default.ContentCopy, contentDescription = "Copy") }
+                                context.copyToClipboard(clipLabel, user.inviteCode)
+                                viewModel.showMessage(R.string.invite_code_copied)
+                            }) { Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.action_copy)) }
                         }
-                        Button(onClick = { context.shareText("Join me on Echobell! Use my invite code: ${user.inviteCode}") }, modifier = Modifier.fillMaxWidth()) {
+                        val shareMessage = stringResource(R.string.invite_share_message_fmt, user.inviteCode)
+                        Button(onClick = { context.shareText(shareMessage) }, modifier = Modifier.fillMaxWidth()) {
                             Icon(Icons.Default.Share, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Share Invite Code")
+                            Text(stringResource(R.string.invite_share_code))
                         }
                     }
                 }
@@ -2144,32 +2208,32 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
             if (user?.canSubmitInviteCode() == true) {
                 item {
                     AppCard {
-                        Text("Have an invite code?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text("Enter a friend's code to earn bonus points.")
+                        Text(stringResource(R.string.invite_have_code), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.invite_enter_code_hint))
                         Spacer(Modifier.height(10.dp))
                         OutlinedButton(
                             onClick = { submitDialog = true },
                             border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Enter Invite Code")
+                            Text(stringResource(R.string.invite_enter_code))
                         }
                     }
                 }
             }
             item {
                 AppCard {
-                    Text("Rewards", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    InfoRow("Friend signs up with your code", "+100 points for them")
-                    InfoRow("Friend subscribes monthly", "+20 points for you")
-                    InfoRow("Friend subscribes annual", "+200 points for you")
+                    Text(stringResource(R.string.invite_rewards), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    InfoRow(stringResource(R.string.invite_reward_signup), stringResource(R.string.invite_reward_signup_value))
+                    InfoRow(stringResource(R.string.invite_reward_monthly), stringResource(R.string.invite_reward_monthly_value))
+                    InfoRow(stringResource(R.string.invite_reward_annual), stringResource(R.string.invite_reward_annual_value))
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         thickness = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                     )
-                    InfoRow("Redeem 1 month premium", "200 points")
-                    InfoRow("Redeem 1 year premium", "2000 points")
+                    InfoRow(stringResource(R.string.invite_redeem_month), stringResource(R.string.invite_redeem_month_value))
+                    InfoRow(stringResource(R.string.invite_redeem_year), stringResource(R.string.invite_redeem_year_value))
                 }
             }
         }
@@ -2178,16 +2242,16 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
     if (submitDialog) {
         AlertDialog(
             onDismissRequest = { submitDialog = false },
-            title = { Text("Enter Invite Code") },
-            text = { AppTextField(value = code, onValueChange = { code = it.uppercase(Locale.US) }, label = "Invite code", modifier = Modifier.fillMaxWidth()) },
+            title = { Text(stringResource(R.string.invite_enter_code)) },
+            text = { AppTextField(value = code, onValueChange = { code = it.uppercase(Locale.US) }, label = stringResource(R.string.invite_code_label), modifier = Modifier.fillMaxWidth()) },
             confirmButton = {
                 TextButton(enabled = code.isNotBlank(), onClick = {
                     submitDialog = false
                     viewModel.submitInviteCode(code)
                     code = ""
-                }) { Text("Submit") }
+                }) { Text(stringResource(R.string.action_submit)) }
             },
-            dismissButton = { TextButton(onClick = { submitDialog = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { submitDialog = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
     if (redeemDialog) {
@@ -2206,20 +2270,20 @@ private fun InviteScreen(state: AppUiState, viewModel: EchobellViewModel, navCon
 private fun RedeemDialog(balance: Int, onDismiss: () -> Unit, onRedeem: (String) -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Redeem Points") },
+        title = { Text(stringResource(R.string.invite_redeem)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Your balance: $balance points")
+                Text(pluralStringResource(R.plurals.redeem_balance, balance, balance))
                 OutlinedButton(enabled = balance >= 200, onClick = { onRedeem("month") }, modifier = Modifier.fillMaxWidth()) {
-                    Text("1 Month Premium - 200 points")
+                    Text(stringResource(R.string.redeem_month_option))
                 }
                 OutlinedButton(enabled = balance >= 2000, onClick = { onRedeem("year") }, modifier = Modifier.fillMaxWidth()) {
-                    Text("1 Year Premium - 2000 points")
+                    Text(stringResource(R.string.redeem_year_option))
                 }
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
     )
 }
 
@@ -2281,7 +2345,7 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
     }
 
     ScreenScaffold(
-        title = "Echobell Premium",
+        title = stringResource(R.string.premium_title),
         navigationIcon = { BackOrEmpty(navController) },
     ) { padding ->
         LazyColumn(
@@ -2294,38 +2358,38 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
                     Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(42.dp))
                     Spacer(Modifier.height(8.dp))
                     if (state.premiumActive) {
-                        Text("You're a Premium Member", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        Text("Premium access until ${formatDate(state.user?.premiumExpiresAt ?: 0)}")
+                        Text(stringResource(R.string.paywall_member_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.paywall_member_until_fmt, formatDate(state.user?.premiumExpiresAt ?: 0)))
                     } else {
-                        Text("Unlock Premium Features", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        Text("Subscribe with Google Play or use invite points to extend premium access.")
+                        Text(stringResource(R.string.paywall_unlock_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.paywall_unlock_description))
                     }
                 }
             }
             item {
                 AppCard {
-                    FeatureRow(Icons.Default.Phone, "Call Notifications", "Get urgent notifications with high-priority Android delivery.")
-                    FeatureRow(Icons.Default.Notifications, "Unlimited Channels", "Free users can keep up to $FREE_USER_CHANNEL_LIMIT active channels.")
-                    FeatureRow(Icons.Default.Key, "Unlimited Direct Keys", "Free users can create up to $FREE_USER_DIRECT_KEY_LIMIT direct keys.")
-                    FeatureRow(Icons.Default.Star, "Support Echobell", "Keep the service sustainable and fast.")
+                    FeatureRow(Icons.Default.Phone, stringResource(R.string.paywall_feature_calls_title), stringResource(R.string.paywall_feature_calls_description))
+                    FeatureRow(Icons.Default.Notifications, stringResource(R.string.paywall_feature_channels_title), pluralStringResource(R.plurals.channels_limit_banner, FREE_USER_CHANNEL_LIMIT, FREE_USER_CHANNEL_LIMIT))
+                    FeatureRow(Icons.Default.Key, stringResource(R.string.paywall_feature_keys_title), pluralStringResource(R.plurals.direct_limit_banner, FREE_USER_DIRECT_KEY_LIMIT, FREE_USER_DIRECT_KEY_LIMIT))
+                    FeatureRow(Icons.Default.Star, stringResource(R.string.paywall_feature_support_title), stringResource(R.string.paywall_feature_support_description))
                 }
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Google Play")
+                    SectionTitle(stringResource(R.string.paywall_google_play))
                     AppCard {
                         when {
-                            state.premiumActive -> Text("Premium is active on this account.")
+                            state.premiumActive -> Text(stringResource(R.string.paywall_premium_active))
                             billingLoading -> CircularProgressIndicator()
                             billingProducts.isEmpty() -> {
-                                Text("Google Play products are not available in this build or on this device.")
+                                Text(stringResource(R.string.paywall_products_unavailable))
                                 Spacer(Modifier.height(8.dp))
                                 OutlinedButton(
                                     onClick = { billingManager.start() },
                                     border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text("Retry")
+                                    Text(stringResource(R.string.action_retry))
                                 }
                             }
                             else -> {
@@ -2342,10 +2406,13 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
                                     onClick = { selectedProduct?.let { product -> activity?.let { billingManager.launchPurchase(it, product) } } },
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
-                                    Text(if (selectedProduct?.trialPeriod.isNullOrBlank()) "Subscribe" else "Start Free Trial")
+                                    Text(
+                                        if (selectedProduct?.trialPeriod.isNullOrBlank()) stringResource(R.string.action_subscribe)
+                                        else stringResource(R.string.paywall_start_trial)
+                                    )
                                 }
                                 TextButton(onClick = { billingManager.restorePurchases(userInitiated = true) }, modifier = Modifier.fillMaxWidth()) {
-                                    Text("Restore Purchases")
+                                    Text(stringResource(R.string.paywall_restore))
                                 }
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -2353,11 +2420,11 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     TextButton(onClick = { context.openUrl("https://echobell.one/terms") }) {
-                                        Text("Terms")
+                                        Text(stringResource(R.string.paywall_terms))
                                     }
                                     Text("|", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     TextButton(onClick = { context.openUrl("https://echobell.one/privacy") }) {
-                                        Text("Privacy")
+                                        Text(stringResource(R.string.paywall_privacy))
                                     }
                                 }
                             }
@@ -2369,7 +2436,7 @@ private fun PaywallScreen(state: AppUiState, viewModel: EchobellViewModel, navCo
                 Button(onClick = { navController.navigate(Routes.Invite) }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Star, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Redeem Invite Points")
+                    Text(stringResource(R.string.paywall_redeem_points))
                 }
             }
         }
@@ -2418,11 +2485,11 @@ private fun FeatureRow(icon: ImageVector, title: String, description: String) {
 @Composable
 private fun AnnouncementsScreen(state: AppUiState, viewModel: EchobellViewModel, navController: NavHostController) {
     ScreenScaffold(
-        title = "Announcements",
+        title = stringResource(R.string.announcements_title),
         navigationIcon = { BackOrEmpty(navController) },
         actions = {
             IconButton(onClick = { viewModel.refreshAnnouncements() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.action_refresh))
             }
         },
     ) { padding ->
@@ -2432,7 +2499,7 @@ private fun AnnouncementsScreen(state: AppUiState, viewModel: EchobellViewModel,
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             if (state.announcements.isEmpty()) {
-                item { EmptyState(Icons.Default.Campaign, "No Announcements", "You're all caught up for now.") }
+                item { EmptyState(Icons.Default.Campaign, stringResource(R.string.announcements_empty_title), stringResource(R.string.announcements_empty_description)) }
             }
             items(state.announcements, key = { it.id }) { announcement ->
                 AnnouncementRow(announcement, announcement.id in state.readAnnouncementIds) {
@@ -2479,7 +2546,7 @@ private fun AnnouncementDetailScreen(announcement: Announcement, viewModel: Echo
         viewModel.markAnnouncementRead(announcement.id)
     }
     ScreenScaffold(
-        title = "Announcement",
+        title = stringResource(R.string.announcement_title),
         navigationIcon = { BackOrEmpty(navController) },
     ) { padding ->
         LazyColumn(
@@ -2543,7 +2610,7 @@ private fun SubscribersScreen(viewModel: EchobellViewModel, navController: NavHo
         viewModel.loadSubscribers(channel.remoteId) { subscribers = it }
     }
     ScreenScaffold(
-        title = "Subscribers",
+        title = stringResource(R.string.subscribers_title),
         navigationIcon = { BackOrEmpty(navController) },
     ) { padding ->
         LazyColumn(
@@ -2556,7 +2623,7 @@ private fun SubscribersScreen(viewModel: EchobellViewModel, navController: NavHo
                     Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 }
                 subscribers!!.isEmpty() -> item {
-                    EmptyState(Icons.Default.Person, "No Subscribers", "This channel has no subscribers yet.")
+                    EmptyState(Icons.Default.Person, stringResource(R.string.subscribers_empty_title), stringResource(R.string.subscribers_empty_description))
                 }
                 else -> items(subscribers!!, key = { it.id }) { subscriber ->
                     AppCard {
@@ -2572,7 +2639,7 @@ private fun SubscribersScreen(viewModel: EchobellViewModel, navController: NavHo
                                     subscribers = subscribers?.filterNot { it.id == subscriber.id }
                                 }
                             }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_remove), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
@@ -2585,7 +2652,7 @@ private fun SubscribersScreen(viewModel: EchobellViewModel, navController: NavHo
 @Composable
 private fun MissingScreen(message: String, navController: NavHostController) {
     ScreenScaffold(
-        title = "Missing",
+        title = stringResource(R.string.missing_title),
         navigationIcon = { BackOrEmpty(navController) },
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
@@ -2659,7 +2726,7 @@ private fun CompactTopBar(
 @Composable
 private fun BackOrEmpty(navController: NavHostController) {
     IconButton(onClick = { navController.popBackStack() }) {
-        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
     }
 }
 
@@ -2774,8 +2841,8 @@ private fun PermissionBanner(requestNotificationPermission: () -> Unit) {
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Notification permission needed", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text("Allow notifications so channel events can be delivered.", color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                Text(stringResource(R.string.notif_permission_title), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text(stringResource(R.string.notif_permission_description), color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -2787,7 +2854,7 @@ private fun PermissionBanner(requestNotificationPermission: () -> Unit) {
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
-            Text("Allow Notifications")
+            Text(stringResource(R.string.notif_permission_allow))
         }
     }
 }
@@ -2804,8 +2871,8 @@ private fun FullScreenIntentBanner(requestFullScreenIntentPermission: () -> Unit
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Full-screen alerts disabled", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                Text("Allow urgent call notifications to appear over the lock screen.", color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
+                Text(stringResource(R.string.fsi_title), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                Text(stringResource(R.string.fsi_description), color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -2817,7 +2884,7 @@ private fun FullScreenIntentBanner(requestFullScreenIntentPermission: () -> Unit
                 contentColor = MaterialTheme.colorScheme.onSecondary
             )
         ) {
-            Text("Enable Full-screen Alerts")
+            Text(stringResource(R.string.fsi_enable))
         }
     }
 }
@@ -2833,7 +2900,7 @@ private fun LimitBanner(text: String, onUpgrade: () -> Unit) {
                     contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("Upgrade")
+                Text(stringResource(R.string.action_upgrade))
             }
         }
     }
@@ -2859,6 +2926,13 @@ private fun InfoRow(label: String, value: String) {
     }
 }
 
+@StringRes
+private fun NotificationType.labelRes(): Int = when (this) {
+    NotificationType.Active -> R.string.notification_type_active
+    NotificationType.TimeSensitive -> R.string.notification_type_time_sensitive
+    NotificationType.Calling -> R.string.notification_type_calling
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun NotificationTypeSelector(
@@ -2874,7 +2948,7 @@ private fun NotificationTypeSelector(
                 onClick = {
                     if (type == NotificationType.Calling && !premiumActive) onPaywall() else onSelected(type)
                 },
-                label = { Text(type.label, style = MaterialTheme.typography.labelMedium) },
+                label = { Text(stringResource(type.labelRes()), style = MaterialTheme.typography.labelMedium) },
                 border = null,
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -2917,7 +2991,7 @@ private fun ConfirmDialog(
                 Text(confirm, color = MaterialTheme.colorScheme.error)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 
@@ -2942,7 +3016,7 @@ private fun AnnouncementPreview(announcement: Announcement, onClick: () -> Unit)
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text("Tap to view details", style = MaterialTheme.typography.bodySmall, color = levelColors.mutedContent)
+                Text(stringResource(R.string.announcement_tap_to_view), style = MaterialTheme.typography.bodySmall, color = levelColors.mutedContent)
             }
         }
     }
@@ -2959,12 +3033,16 @@ private fun String.hiddenToken(): String =
 
 private fun String.urlEncode(): String = URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
 
-private fun PaddingValues.plus(other: PaddingValues): PaddingValues = PaddingValues(
-    start = calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr) + other.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
-    top = calculateTopPadding() + other.calculateTopPadding(),
-    end = calculateRightPadding(androidx.compose.ui.unit.LayoutDirection.Ltr) + other.calculateRightPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
-    bottom = calculateBottomPadding() + other.calculateBottomPadding(),
-)
+@Composable
+private fun PaddingValues.plus(other: PaddingValues): PaddingValues {
+    val layoutDirection = LocalLayoutDirection.current
+    return PaddingValues(
+        start = calculateStartPadding(layoutDirection) + other.calculateStartPadding(layoutDirection),
+        top = calculateTopPadding() + other.calculateTopPadding(),
+        end = calculateEndPadding(layoutDirection) + other.calculateEndPadding(layoutDirection),
+        bottom = calculateBottomPadding() + other.calculateBottomPadding(),
+    )
+}
 
 private fun levelPriority(level: AnnouncementLevel): Int = when (level) {
     AnnouncementLevel.Critical -> 3
@@ -2972,11 +3050,12 @@ private fun levelPriority(level: AnnouncementLevel): Int = when (level) {
     AnnouncementLevel.Info, AnnouncementLevel.Unknown -> 1
 }
 
+@Composable
 private fun AnnouncementLevel.label(): String = when (this) {
-    AnnouncementLevel.Info -> "Info"
-    AnnouncementLevel.Warning -> "Warning"
-    AnnouncementLevel.Critical -> "Critical"
-    AnnouncementLevel.Unknown -> "Info"
+    AnnouncementLevel.Info -> stringResource(R.string.level_info)
+    AnnouncementLevel.Warning -> stringResource(R.string.level_warning)
+    AnnouncementLevel.Critical -> stringResource(R.string.level_critical)
+    AnnouncementLevel.Unknown -> stringResource(R.string.level_info)
 }
 
 private data class AnnouncementLevelColors(
@@ -3050,19 +3129,19 @@ private fun AnnouncementLevel.colors(read: Boolean = false): AnnouncementLevelCo
 
 private fun dayKey(epoch: Long): String =
     Instant.ofEpochSecond(epoch).atZone(ZoneId.systemDefault()).toLocalDate()
-        .format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
+        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault()))
 
 private fun formatTime(epoch: Long): String =
     Instant.ofEpochSecond(epoch).atZone(ZoneId.systemDefault()).toLocalTime()
-        .format(DateTimeFormatter.ofPattern("HH:mm"))
+        .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(Locale.getDefault()))
 
 private fun formatDate(epoch: Long): String =
     Instant.ofEpochSecond(epoch).atZone(ZoneId.systemDefault()).toLocalDate()
-        .format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
+        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault()))
 
 private fun formatDateTime(epoch: Long): String =
     Instant.ofEpochSecond(epoch).atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("MMM d, HH:mm"))
+        .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(Locale.getDefault()))
 
 private fun Context.copyToClipboard(label: String, text: String) {
     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -3077,7 +3156,7 @@ private fun Context.shareText(text: String) {
                 putExtra(Intent.EXTRA_TEXT, text)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             },
-            "Share",
+            getString(R.string.action_share),
         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
     )
 }

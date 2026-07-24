@@ -1,0 +1,296 @@
+<resources>
+    <!-- Common actions -->
+    <string name="action_cancel">キャンセル</string>
+    <string name="action_close">閉じる</string>
+    <string name="action_save">保存</string>
+    <string name="action_delete">削除</string>
+    <string name="action_retry">再試行</string>
+    <string name="action_back">戻る</string>
+    <string name="action_upgrade">アップグレード</string>
+    <string name="action_subscribe">購読する</string>
+    <string name="action_unsubscribe">購読を解除</string>
+    <string name="action_create">作成</string>
+    <string name="action_submit">送信</string>
+    <string name="action_share">共有</string>
+    <string name="action_copy">コピー</string>
+    <string name="action_reset">リセット</string>
+    <string name="action_show">表示</string>
+    <string name="action_hide">非表示</string>
+    <string name="action_edit">編集</string>
+    <string name="action_refresh">更新</string>
+    <string name="action_remove">削除</string>
+    <string name="action_cannot_be_undone">この操作は取り消せません。</string>
+    <string name="copied_fmt">%1$sをコピーしました。</string>
+
+    <!-- Auth -->
+    <string name="auth_tagline">重要なイベントを、すぐにお知らせ。</string>
+    <string name="auth_continue_with_email">メールアドレスで続行</string>
+    <string name="auth_email_label">メールアドレス</string>
+    <string name="auth_email_invalid">有効なメールアドレスを入力してください</string>
+    <string name="auth_send_code">認証コードを送信</string>
+    <string name="auth_enter_code_title">認証コードを入力</string>
+    <string name="auth_code_sent_to_fmt">6 桁の認証コードを %1$s に送信しました。</string>
+    <string name="auth_code_label">認証コード</string>
+    <string name="auth_sign_in">ログイン</string>
+    <string name="auth_use_another_email">別のメールアドレスを使う</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_records">履歴</string>
+    <string name="nav_channels">チャンネル</string>
+    <string name="nav_direct">ダイレクト</string>
+    <string name="nav_settings">設定</string>
+
+    <!-- Records -->
+    <string name="records_inbox_actions">受信トレイの操作</string>
+    <string name="records_mark_all_read">すべて既読にする</string>
+    <string name="records_clear_all">すべて消去</string>
+    <string name="records_clear_all_title">すべての通知を消去</string>
+    <string name="records_clear_all_message">この端末上のすべての通知履歴が削除されます。この操作は取り消せません。</string>
+    <string name="records_empty_title">履歴はまだありません</string>
+    <string name="records_empty_description">チャンネルやダイレクト Webhook 経由で受信した通知がここに表示されます。</string>
+    <string name="record_fallback_title">通知</string>
+    <string name="record_source">ソース</string>
+    <string name="record_external">外部リンク</string>
+    <string name="record_mark_unread">未読にする</string>
+
+    <!-- Channel status -->
+    <string name="channel_status_inactive">無効</string>
+    <string name="channel_status_managed">管理中</string>
+    <string name="channel_status_subscribed">購読中</string>
+    <string name="channel_status_available">購読可能</string>
+
+    <!-- Channels -->
+    <string name="channels_documentation">ドキュメント</string>
+    <string name="channels_new">新しいチャンネル</string>
+    <string name="channels_subscribe_fab">チャンネルを購読</string>
+    <string name="channels_intro_description">チャンネルを購読すると、グループ向けの通知やトピック別の通知を受け取れます。</string>
+    <string name="channels_empty_title">チャンネルがありません</string>
+    <string name="channels_empty_description">チャンネルを作成または購読して、通知の受信を始めましょう。</string>
+    <plurals name="channels_limit_banner">
+        <item quantity="other">無料ユーザーが保持できる有効なチャンネルは最大 %d 件です。</item>
+    </plurals>
+    <string name="channel_last_triggered_fmt">最終トリガー: %1$s</string>
+    <string name="channel_never_triggered">トリガーされていません</string>
+    <string name="channel_not_found">チャンネルが見つかりません</string>
+    <string name="channel_number_fmt">チャンネル #%1$d</string>
+
+    <!-- Channel detail -->
+    <string name="channel_trigger">トリガー</string>
+    <string name="channel_webhook">Webhook</string>
+    <string name="channel_email">メール</string>
+    <string name="channel_subscription_link">購読リンク</string>
+    <string name="channel_link">リンク</string>
+    <string name="channel_notification_section">通知</string>
+    <string name="channel_subscribe_prompt">この Android 端末でこのチャンネルを購読すると通知を受け取れます。</string>
+    <string name="channel_templates_section">通知テンプレート</string>
+    <string name="channel_conditions_section">条件</string>
+    <string name="channel_link_template_section">リンクテンプレート</string>
+    <string name="channel_recent_records">最近の履歴</string>
+    <string name="delete_all">すべて削除</string>
+    <string name="channel_manage_subscribers">購読者を管理</string>
+    <string name="channel_delete_title">チャンネルを削除</string>
+    <string name="channel_unsubscribe_message">このチャンネルからの通知は届かなくなります。</string>
+
+    <!-- Channel form -->
+    <string name="channel_form_new_title">新しいチャンネル</string>
+    <string name="channel_form_edit_title">チャンネルを編集</string>
+    <string name="channel_form_name_label">チャンネル名 *</string>
+    <string name="channel_form_name_required">チャンネル名は必須です</string>
+    <string name="channel_form_color">カラー</string>
+    <string name="channel_form_title_template">タイトルテンプレート</string>
+    <string name="channel_form_title_placeholder">未入力の場合はチャンネル名</string>
+    <string name="channel_form_body_template">本文テンプレート *</string>
+    <string name="channel_form_body_required">本文テンプレートは必須です</string>
+    <string name="channel_form_advanced">詳細設定</string>
+    <string name="channel_form_conditions">条件</string>
+    <string name="channel_form_link_template">リンクテンプレート</string>
+    <string name="channel_form_note">メモ</string>
+    <string name="channel_form_subscription">購読</string>
+    <string name="channel_form_auto_subscribe">作成後に購読する</string>
+    <string name="channel_form_auto_subscribe_description">この端末はすぐに通知を受信します。</string>
+
+    <!-- Subscribe -->
+    <string name="subscribe_title">チャンネルを購読</string>
+    <string name="subscribe_prompt">購読リンクまたはトークンを入力してください。</string>
+    <string name="subscribe_link_label">購読リンク</string>
+    <string name="subscribe_invalid_token">有効な購読トークンまたはリンクを入力してください</string>
+    <string name="subscribe_get_info">情報を取得</string>
+
+    <!-- Direct keys -->
+    <string name="direct_new_key">ダイレクトキーを作成</string>
+    <string name="direct_intro_title">ダイレクト Webhook</string>
+    <string name="direct_intro_description">ダイレクトキーとシンプルな HTTP リクエストで通知を直接送信できます。</string>
+    <string name="direct_empty_title">ダイレクトキーがありません</string>
+    <string name="direct_empty_description">ダイレクトキーを作成すると通知を直接送信できます。</string>
+    <plurals name="direct_limit_banner">
+        <item quantity="other">無料ユーザーが作成できるダイレクトキーは最大 %d 件です。</item>
+    </plurals>
+    <string name="direct_new_key_title">新しいダイレクトキー</string>
+    <string name="direct_key_name_label">キー名</string>
+    <string name="direct_key_label">キー</string>
+    <string name="direct_clear_records">履歴を消去</string>
+    <string name="direct_reset_token_title">トークンをリセット</string>
+    <string name="direct_reset_token_message">現在の Webhook URL は使用できなくなります。</string>
+    <string name="direct_clear_records_title">履歴を消去</string>
+    <string name="direct_clear_records_message">このダイレクトキーのすべての履歴が削除されます。</string>
+    <string name="direct_delete_title">ダイレクトキーを削除</string>
+
+    <!-- Settings -->
+    <string name="settings_account">アカウント</string>
+    <string name="settings_hello_fmt">こんにちは、%1$s さん</string>
+    <string name="settings_default_user">ユーザー</string>
+    <string name="settings_data_note">チャンネルと購読のデータは Echobell のサーバーに保存されます。通知履歴はこの端末にのみ保存されます。</string>
+    <string name="settings_user_settings">ユーザー設定</string>
+    <string name="settings_user_guide">ユーザーガイド</string>
+    <string name="settings_invite_friends">友達を招待</string>
+    <string name="settings_bonus_available">ボーナスあり</string>
+    <string name="settings_support">サポート</string>
+    <string name="support_email">メールサポート</string>
+    <string name="support_discord">Discord グループ</string>
+    <string name="support_telegram">Telegram グループ</string>
+    <string name="support_privacy">プライバシーポリシー</string>
+    <string name="support_terms">利用規約</string>
+    <string name="premium_active">Premium 有効</string>
+    <string name="premium_until_fmt">%1$s まで</string>
+    <string name="premium_title">Echobell Premium</string>
+    <string name="premium_pitch">無制限のチャンネル、ダイレクトキー、着信通知のロックを解除。</string>
+
+    <!-- User settings -->
+    <string name="user_settings_title">ユーザー設定</string>
+    <string name="user_welcome_fmt">ようこそ、%1$s さん</string>
+    <string name="user_id">ユーザー ID</string>
+    <string name="user_email">メール</string>
+    <string name="user_premium_until">Premium 有効期限</string>
+    <string name="user_edit_name">名前を変更</string>
+    <string name="user_new_name">新しい名前</string>
+    <string name="user_sign_out">ログアウト</string>
+    <string name="user_sign_out_message">アカウントにアクセスするには再度ログインが必要です。</string>
+    <string name="user_delete_account">アカウントを削除</string>
+    <string name="user_delete_message">Echobell から削除確認のメールが届きます。</string>
+    <string name="user_request_deletion">削除をリクエスト</string>
+    <string name="user_delete_blocked">アカウント削除をリクエストする前に、管理中のチャンネルを削除してください。</string>
+
+    <!-- Invite -->
+    <string name="invite_points_balance">ポイント残高</string>
+    <string name="invite_points">ポイント</string>
+    <string name="invite_redeem">ポイントを交換</string>
+    <string name="invite_your_code">あなたの招待コード</string>
+    <string name="invite_generate">招待コードを生成</string>
+    <string name="invite_code_copied">招待コードをコピーしました。</string>
+    <string name="invite_code_clip_label">招待コード</string>
+    <string name="invite_share_message_fmt">Echobell で一緒に使いましょう！私の招待コード: %1$s</string>
+    <string name="invite_share_code">招待コードを共有</string>
+    <string name="invite_have_code">招待コードをお持ちですか？</string>
+    <string name="invite_enter_code_hint">友達のコードを入力するとボーナスポイントがもらえます。</string>
+    <string name="invite_enter_code">招待コードを入力</string>
+    <string name="invite_code_label">招待コード</string>
+    <string name="invite_rewards">特典</string>
+    <string name="invite_reward_signup">友達があなたのコードで登録</string>
+    <string name="invite_reward_signup_value">相手に +100 ポイント</string>
+    <string name="invite_reward_monthly">友達が月額プランを購読</string>
+    <string name="invite_reward_monthly_value">あなたに +20 ポイント</string>
+    <string name="invite_reward_annual">友達が年額プランを購読</string>
+    <string name="invite_reward_annual_value">あなたに +200 ポイント</string>
+    <string name="invite_redeem_month">Premium 1 か月と交換</string>
+    <string name="invite_redeem_month_value">200 ポイント</string>
+    <string name="invite_redeem_year">Premium 1 年と交換</string>
+    <string name="invite_redeem_year_value">2000 ポイント</string>
+    <plurals name="redeem_balance">
+        <item quantity="other">残高: %d ポイント</item>
+    </plurals>
+    <string name="redeem_month_option">Premium 1 か月 – 200 ポイント</string>
+    <string name="redeem_year_option">Premium 1 年 – 2000 ポイント</string>
+
+    <!-- Paywall -->
+    <string name="paywall_member_title">あなたは Premium メンバーです</string>
+    <string name="paywall_member_until_fmt">Premium は %1$s まで有効</string>
+    <string name="paywall_unlock_title">Premium 機能のロックを解除</string>
+    <string name="paywall_unlock_description">Google Play で購読するか、招待ポイントを使って Premium を延長できます。</string>
+    <string name="paywall_feature_calls_title">着信通知</string>
+    <string name="paywall_feature_calls_description">Android の高優先度配信で緊急通知を受け取れます。</string>
+    <string name="paywall_feature_channels_title">無制限のチャンネル</string>
+    <string name="paywall_feature_keys_title">無制限のダイレクトキー</string>
+    <string name="paywall_feature_support_title">Echobell を応援</string>
+    <string name="paywall_feature_support_description">サービスを持続的かつ高速に保ちます。</string>
+    <string name="paywall_premium_active">このアカウントでは Premium が有効です。</string>
+    <string name="paywall_products_unavailable">このビルドまたは端末では Google Play の商品を利用できません。</string>
+    <string name="paywall_start_trial">無料トライアルを開始</string>
+    <string name="paywall_restore">購入を復元</string>
+    <string name="paywall_terms">規約</string>
+    <string name="paywall_privacy">プライバシー</string>
+    <string name="paywall_redeem_points">招待ポイントを交換</string>
+
+    <!-- Announcements -->
+    <string name="announcements_title">お知らせ</string>
+    <string name="announcements_empty_title">お知らせはありません</string>
+    <string name="announcements_empty_description">現在、新しいお知らせはありません。</string>
+    <string name="announcement_title">お知らせ</string>
+    <string name="announcement_tap_to_view">タップして詳細を表示</string>
+    <string name="announcement_not_found">お知らせが見つかりません</string>
+    <string name="level_info">情報</string>
+    <string name="level_warning">警告</string>
+    <string name="level_critical">重大</string>
+
+    <!-- Subscribers -->
+    <string name="subscribers_title">購読者</string>
+    <string name="subscribers_empty_title">購読者がいません</string>
+    <string name="subscribers_empty_description">このチャンネルにはまだ購読者がいません。</string>
+
+    <!-- Missing -->
+    <string name="missing_title">見つかりません</string>
+
+    <!-- Permission banners -->
+    <string name="notif_permission_title">通知の許可が必要です</string>
+    <string name="notif_permission_description">チャンネルイベントを受信できるよう、通知を許可してください。</string>
+    <string name="notif_permission_allow">通知を許可</string>
+    <string name="fsi_title">全画面アラートが無効です</string>
+    <string name="fsi_description">緊急の着信通知をロック画面の上に表示できるようにします。</string>
+    <string name="fsi_enable">全画面アラートを有効にする</string>
+
+    <!-- Notification types -->
+    <string name="notification_type_active">標準</string>
+    <string name="notification_type_time_sensitive">時間指定</string>
+    <string name="notification_type_calling">着信</string>
+
+    <!-- Incoming call screen -->
+    <string name="call_incoming">着信通知</string>
+    <string name="call_connected">接続済み</string>
+    <string name="call_answer">応答</string>
+    <string name="call_dismiss">拒否</string>
+    <string name="call_end">終了</string>
+
+    <!-- System notification channels -->
+    <string name="notification_channel_name">Echobell の通知</string>
+    <string name="notification_channel_description">チャンネルおよびダイレクト Webhook の通知</string>
+    <string name="call_channel_name">Echobell の着信</string>
+    <string name="call_channel_description">緊急の着信スタイル通知</string>
+
+    <!-- Snackbar messages -->
+    <string name="msg_verification_code_sent">認証コードを送信しました。</string>
+    <string name="msg_deletion_email_sent">削除確認メールを送信しました。</string>
+    <string name="msg_trigger_token_reset">トリガートークンをリセットしました。</string>
+    <string name="msg_subscription_token_reset">購読トークンをリセットしました。</string>
+    <string name="msg_direct_key_token_reset">ダイレクトキーのトークンをリセットしました。</string>
+    <string name="msg_invite_code_applied">招待コードを適用しました。</string>
+    <string name="msg_premium_extended">Premium を延長しました。</string>
+    <string name="msg_subscription_updated">購読を更新しました。</string>
+    <string name="msg_not_signed_in">ログインしていません</string>
+    <string name="msg_unknown_error">不明なエラー</string>
+    <string name="msg_unable_open_settings">システム設定を開けませんでした。</string>
+
+    <!-- Google Play billing -->
+    <string name="billing_unavailable">Google Play を利用できません。</string>
+    <string name="billing_no_offer">この商品に利用可能な Google Play のオファーがありません。</string>
+    <string name="billing_flow_failed">Google Play の購入フローを開けませんでした。</string>
+    <string name="billing_no_subscription_found">有効な Google Play の購読が見つかりませんでした。</string>
+    <string name="billing_restore_failed">Google Play の購入を復元できませんでした。</string>
+    <string name="billing_purchase_failed">Google Play の購入に失敗しました。</string>
+    <string name="billing_products_unavailable">Google Play の商品を利用できません。</string>
+    <string name="billing_purchase_pending">Google Play の購入は保留中です。支払いが完了すると Premium が有効になります。</string>
+    <string name="billing_ack_failed">Google Play の購入を承認できませんでした。</string>
+    <string name="billing_period_month">月</string>
+    <string name="billing_period_year">年</string>
+    <plurals name="billing_trial_days_free">
+        <item quantity="other">%d 日間無料</item>
+    </plurals>
+</resources>
