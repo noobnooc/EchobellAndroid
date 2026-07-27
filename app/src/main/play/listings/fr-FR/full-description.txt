@@ -1,0 +1,37 @@
+Echobell transforme vos webhooks et vos e-mails en notifications push instantanées sur votre téléphone, et les alertes critiques peuvent sonner comme un appel pour qu'une panne ne reste pas ignorée dans le volet de notifications.
+
+Une seule requête HTTP et votre téléphone est au courant. Echobell est conçu pour les développeurs, les équipes SRE et ops, les créateurs indépendants, les adeptes de l'auto-hébergement et du homelab, les traders et les petites équipes qui ont besoin d'alertes qui arrivent vraiment.
+
+TROIS NIVEAUX D'ALERTE
+• Standard — une notification push classique pour les événements de routine
+• Urgente — priorité plus élevée, remarquée plus vite
+• Appel — les alertes critiques sonnent comme un appel entrant
+
+CANAUX ET CLÉS DIRECTES
+• Les canaux regroupent des alertes liées, portent des modèles et des conditions, et se partagent par un lien d'abonnement pour toute l'équipe
+• Les clés directes sont des URL de webhook dédiées à un script, une tâche cron ou une intégration rapide
+• Un canal se déclenche par requête webhook ou par simple e-mail envoyé à son adresse
+
+RENDRE CHAQUE ALERTE LISIBLE
+• Les modèles de titre et de corps transforment une charge utile JSON brute en une phrase exploitable
+• Les conditions filtrent le bruit : seuls les événements importants deviennent des notifications
+• Les modèles de lien ouvrent directement le bon tableau de bord, graphique, runbook ou page d'incident
+• L'historique des notifications reste sur cet appareil, consultable à tout moment
+
+À QUOI SERT ECHOBELL
+• Supervision de serveurs, tests de disponibilité, alertes de panne et de rétablissement
+• Incidents de production, erreurs d'API, astreinte et changements de statut
+• Pipelines CI/CD, notifications de déploiement, échecs de build et publications
+• Tâches cron, sauvegardes, tâches planifiées et surveillance par heartbeat
+• Domotique, services auto-hébergés, NAS et capteurs de homelab
+• Alertes de prix actions et crypto, signaux de trading et scripts de stratégie
+• Paiements, commandes et événements clients des petites entreprises
+• Événements de sécurité, alertes de connexion et signaux d'audit
+
+COMPATIBLE AVEC VOTRE EXISTANT
+Tout ce qui peut envoyer une requête HTTP peut envoyer une notification Echobell : scripts shell, Python, Node, plateformes d'automatisation, stacks de supervision, services de disponibilité, runners CI, box domotiques et bots de trading. Aucun SDK à installer, aucun agent à faire tourner.
+
+PREMIUM
+Echobell Premium débloque des canaux et des clés directes en nombre illimité ainsi que les alertes de type appel. Les points de parrainage peuvent aussi être convertis en accès premium.
+
+Echobell ne remplace ni votre supervision, ni votre plateforme d'automatisation, ni votre outil d'incidents. Il leur ajoute une couche d'alerte mobile rapide, pour que les événements qui comptent atteignent le téléphone que vous avez vraiment sur vous.

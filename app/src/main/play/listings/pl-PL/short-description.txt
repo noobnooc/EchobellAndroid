@@ -1,0 +1,1 @@
+Webhooki jako powiadomienia push. Krytyczne alerty dzwonią jak połączenie.

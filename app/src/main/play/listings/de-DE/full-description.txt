@@ -1,0 +1,37 @@
+Echobell macht aus Webhooks und E-Mails sofortige Push-Benachrichtigungen auf deinem Handy. Kritische Alarme können wie ein Anruf klingeln, damit eine Störung nicht ungelesen in der Benachrichtigungsleiste liegen bleibt.
+
+Ein HTTP-Request genügt, und dein Handy weiß Bescheid. Echobell ist für Entwickler, SRE- und Ops-Teams, Indie-Maker, Selfhosting- und Homelab-Nutzer, Trader und kleine Teams gebaut, die Alarme brauchen, die wirklich ankommen.
+
+DREI ALARMSTUFEN
+• Standard — eine normale Push-Benachrichtigung für Routineereignisse
+• Zeitkritisch — höhere Priorität, wird schneller bemerkt
+• Anruf — kritische Alarme klingeln wie ein eingehender Anruf
+
+KANÄLE UND DIRECT KEYS
+• Kanäle bündeln zusammengehörende Alarme, tragen Vorlagen und Bedingungen und lassen sich per Abo-Link mit dem ganzen Team teilen
+• Direct Keys sind eigene Webhook-URLs für ein Skript, einen Cronjob oder eine schnelle Integration
+• Ein Kanal lässt sich per Webhook-Request oder per E-Mail an seine Adresse auslösen
+
+JEDEN ALARM LESBAR MACHEN
+• Vorlagen für Titel und Text verwandeln rohes JSON in einen Satz, mit dem du sofort etwas anfangen kannst
+• Bedingungen filtern Rauschen, sodass nur relevante Ereignisse zur Benachrichtigung werden
+• Link-Vorlagen öffnen direkt aus dem Alarm das passende Dashboard, Chart, Runbook oder die Störungsseite
+• Benachrichtigungsverlauf bleibt auf diesem Gerät und ist jederzeit einsehbar
+
+WOFÜR ECHOBELL GENUTZT WIRD
+• Server-Monitoring, Uptime-Checks, Ausfall- und Recovery-Alarme
+• Produktionsstörungen, API-Fehler, Rufbereitschaft und Statusänderungen
+• CI/CD-Pipelines, Deploy-Benachrichtigungen, Build-Fehler und Releases
+• Cronjobs, Backups, geplante Aufgaben und Heartbeat-Überwachung
+• Smart Home, selbst gehostete Dienste, NAS und Homelab-Sensoren
+• Kurs-Alarme für Aktien und Krypto, Handelssignale und Strategie-Skripte
+• Zahlungen, Bestellungen und Kundenereignisse kleiner Unternehmen
+• Sicherheitsereignisse, Login-Alarme und Audit-Signale
+
+PASST ZU DEINEM BESTEHENDEN SETUP
+Alles, was einen HTTP-Request senden kann, kann eine Echobell-Benachrichtigung senden: Shell-Skripte, Python, Node, Automatisierungsplattformen, Monitoring-Stacks, Uptime-Checker, CI-Runner, Smart-Home-Hubs und Trading-Bots. Kein SDK, kein Agent.
+
+PREMIUM
+Echobell Premium schaltet unbegrenzte Kanäle, unbegrenzte Direct Keys und Alarme im Anruf-Stil frei. Einladungspunkte lassen sich ebenfalls in Premium-Zeit eintauschen.
+
+Echobell ersetzt weder deinen Monitoring-Stack noch deine Automatisierungs- oder Incident-Tools. Es legt eine schnelle mobile Alarmschicht darüber, damit wichtige Ereignisse das Handy erreichen, das du wirklich dabeihast.

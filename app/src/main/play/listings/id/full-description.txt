@@ -1,0 +1,37 @@
+Echobell mengubah webhook dan email menjadi notifikasi push seketika di ponsel Anda, dan notifikasi kritis bisa berdering seperti panggilan telepon sehingga gangguan tidak terlewat begitu saja di panel notifikasi.
+
+Cukup satu permintaan HTTP dan ponsel Anda langsung tahu. Echobell dibuat untuk developer, tim SRE dan operasional, indie maker, pengguna layanan self-hosted dan homelab, trader, serta tim kecil yang butuh notifikasi yang benar-benar sampai.
+
+TIGA TINGKAT NOTIFIKASI
+• Standar — notifikasi push biasa untuk kejadian rutin
+• Mendesak — prioritas lebih tinggi, lebih cepat disadari
+• Panggilan — notifikasi kritis berdering seperti panggilan masuk
+
+KANAL DAN KUNCI LANGSUNG
+• Kanal mengelompokkan notifikasi sejenis, menyimpan templat dan kondisi, serta bisa dibagikan lewat satu tautan langganan untuk seluruh tim
+• Kunci langsung adalah URL webhook khusus untuk sebuah skrip, tugas cron, atau integrasi cepat
+• Kanal dapat dipicu lewat permintaan webhook atau dengan mengirim email ke alamatnya
+
+BUAT SETIAP NOTIFIKASI MUDAH DIBACA
+• Templat judul dan isi mengubah payload JSON mentah menjadi kalimat yang langsung bisa ditindaklanjuti
+• Kondisi menyaring gangguan: hanya kejadian penting yang menjadi notifikasi
+• Templat tautan membuka dasbor, grafik, runbook, atau halaman insiden yang tepat langsung dari notifikasi
+• Riwayat notifikasi tersimpan di perangkat ini dan bisa ditinjau kapan saja
+
+ECHOBELL DIPAKAI UNTUK APA
+• Pemantauan server, cek uptime, notifikasi gangguan dan pemulihan
+• Insiden produksi, error API, panggilan on-call, dan perubahan status
+• Pipeline CI/CD, notifikasi deploy, kegagalan build, dan rilis
+• Tugas cron, backup, tugas terjadwal, dan pemantauan heartbeat
+• Rumah pintar, layanan self-hosted, NAS, dan sensor homelab
+• Notifikasi harga saham dan kripto, sinyal trading, dan skrip strategi
+• Pembayaran, pesanan, dan kejadian pelanggan untuk usaha kecil
+• Kejadian keamanan, notifikasi login, dan sinyal audit
+
+COCOK DENGAN YANG SUDAH ANDA PAKAI
+Apa pun yang bisa mengirim permintaan HTTP bisa mengirim notifikasi Echobell: skrip shell, Python, Node, platform otomasi, stack pemantauan, layanan uptime, runner CI, hub rumah pintar, dan bot trading. Tidak ada SDK yang perlu dipasang, tidak ada agen yang perlu berjalan.
+
+PREMIUM
+Echobell Premium membuka kanal dan kunci langsung tanpa batas serta notifikasi bergaya panggilan. Poin undangan juga bisa ditukar dengan akses premium.
+
+Echobell tidak menggantikan stack pemantauan, platform otomasi, atau alat penanganan insiden Anda. Echobell menambahkan lapisan notifikasi seluler yang cepat, agar kejadian yang penting sampai ke ponsel yang benar-benar Anda bawa.

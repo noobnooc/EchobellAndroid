@@ -1,0 +1,37 @@
+Echobell, webhook'ları ve e-postaları telefonunuzda anlık push bildirimlerine dönüştürür; kritik uyarılar bir arama gibi çalabildiği için bir kesinti bildirim panelinde okunmadan kalmaz.
+
+Tek bir HTTP isteği yeter, telefonunuz haberdar olur. Echobell; geliştiriciler, SRE ve sistem ekipleri, bağımsız üreticiler, kendi sunucusunu ve homelab'ini çalıştıranlar, yatırımcılar ve gerçekten ulaşan uyarılara ihtiyaç duyan küçük ekipler için tasarlandı.
+
+ÜÇ UYARI DÜZEYİ
+• Standart — rutin olaylar için normal bir push bildirimi
+• Zaman kritik — önceliği yüksek, daha çabuk fark edilir
+• Arama — kritik uyarılar gelen arama gibi çalar
+
+KANALLAR VE DOĞRUDAN ANAHTARLAR
+• Kanallar ilgili uyarıları gruplar, şablon ve koşul taşır ve tek bir abonelik bağlantısıyla tüm ekiple paylaşılır
+• Doğrudan anahtarlar; bir script, cron görevi veya hızlı bir entegrasyon için ayrılmış webhook adresleridir
+• Bir kanal webhook isteğiyle ya da kanal adresine e-posta göndererek tetiklenir
+
+HER UYARIYI OKUNUR HALE GETİRİN
+• Başlık ve gövde şablonları ham JSON verisini hemen harekete geçebileceğiniz bir cümleye çevirir
+• Koşullar gürültüyü eler; yalnızca önemli olaylar bildirime dönüşür
+• Bağlantı şablonları uyarıdan doğrudan ilgili panoyu, grafiği, runbook'u veya olay sayfasını açar
+• Bildirim kayıtları bu cihazda kalır, istediğiniz zaman incelersiniz
+
+ECHOBELL NE İÇİN KULLANILIYOR
+• Sunucu izleme, erişilebilirlik kontrolleri, kesinti ve toparlanma uyarıları
+• Canlı ortam olayları, API hataları, nöbet çağrıları ve durum değişiklikleri
+• CI/CD hatları, dağıtım bildirimleri, derleme hataları ve sürüm olayları
+• Cron görevleri, yedekleme işleri, planlı görevler ve heartbeat izleme
+• Akıllı ev, kendi barındırdığınız servisler, NAS ve homelab sensörleri
+• Hisse ve kripto fiyat uyarıları, işlem sinyalleri ve strateji scriptleri
+• Küçük işletmeler için ödeme, sipariş ve müşteri olayları
+• Güvenlik olayları, oturum açma uyarıları ve denetim sinyalleri
+
+MEVCUT KURULUMUNUZLA ÇALIŞIR
+HTTP isteği gönderebilen her şey Echobell bildirimi gönderebilir: shell scriptleri, Python, Node, otomasyon platformları, izleme yığınları, erişilebilirlik servisleri, CI koşucuları, akıllı ev merkezleri ve işlem botları. Kurulacak SDK yok, çalıştırılacak ajan yok.
+
+PREMIUM
+Echobell Premium sınırsız kanal, sınırsız doğrudan anahtar ve arama tarzı uyarıları açar. Davet puanları da premium erişime dönüştürülebilir.
+
+Echobell izleme yığınınızın, otomasyon platformunuzun veya olay yönetim aracınızın yerine geçmez. Onlara hızlı bir mobil uyarı katmanı ekler; böylece önemli olaylar gerçekten yanınızda taşıdığınız telefona ulaşır.

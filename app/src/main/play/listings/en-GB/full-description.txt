@@ -1,4 +1,4 @@
-Echobell turns webhooks and emails into instant push notifications on your phone, and critical alerts can ring like a phone call so an outage never sits unread in the notification tray.
+Echobell turns webhooks and emails into instant push notifications on your phone, and critical alerts can ring like a phone call so an outage never sits unread in the notification shade.
 
 Send one HTTP request and your phone knows. Echobell is built for developers, SREs, indie makers, home lab owners, traders and small teams who need real alerts from the systems they already run.
 

@@ -1,0 +1,37 @@
+Echobell biến webhook và email thành thông báo đẩy tức thì trên điện thoại, và cảnh báo quan trọng có thể đổ chuông như một cuộc gọi để sự cố không nằm im chưa đọc trong khay thông báo.
+
+Chỉ một yêu cầu HTTP là điện thoại của bạn đã biết. Echobell dành cho lập trình viên, đội SRE và vận hành, nhà phát triển độc lập, người tự vận hành dịch vụ và homelab, nhà giao dịch, cùng các nhóm nhỏ cần cảnh báo thực sự đến nơi.
+
+BA MỨC CẢNH BÁO
+• Tiêu chuẩn — thông báo đẩy thông thường cho sự kiện hằng ngày
+• Khẩn — mức ưu tiên cao hơn, dễ nhận ra sớm hơn
+• Cuộc gọi — cảnh báo quan trọng đổ chuông như cuộc gọi đến
+
+KÊNH VÀ KHÓA TRỰC TIẾP
+• Kênh gom các cảnh báo cùng loại, chứa mẫu và điều kiện, và có thể chia sẻ bằng một liên kết đăng ký cho cả nhóm
+• Khóa trực tiếp là URL webhook riêng cho một script, một tác vụ cron hay một tích hợp nhanh
+• Kênh có thể kích hoạt bằng yêu cầu webhook hoặc bằng cách gửi email tới địa chỉ của kênh
+
+LÀM MỌI CẢNH BÁO DỄ ĐỌC
+• Mẫu tiêu đề và nội dung biến payload JSON thô thành một câu bạn có thể hành động ngay
+• Điều kiện lọc nhiễu: chỉ những sự kiện quan trọng mới trở thành thông báo
+• Mẫu liên kết mở thẳng bảng điều khiển, biểu đồ, runbook hay trang sự cố phù hợp từ cảnh báo
+• Lịch sử thông báo được lưu trên thiết bị này để xem lại bất cứ lúc nào
+
+MỌI NGƯỜI DÙNG ECHOBELL ĐỂ LÀM GÌ
+• Giám sát máy chủ, kiểm tra uptime, cảnh báo sập và phục hồi
+• Sự cố môi trường production, lỗi API, trực on-call và thay đổi trạng thái
+• Pipeline CI/CD, thông báo triển khai, build thất bại và sự kiện phát hành
+• Tác vụ cron, sao lưu, tác vụ theo lịch và giám sát heartbeat
+• Nhà thông minh, dịch vụ tự vận hành, NAS và cảm biến homelab
+• Cảnh báo giá cổ phiếu và tiền mã hóa, tín hiệu giao dịch và script chiến lược
+• Thanh toán, đơn hàng và sự kiện khách hàng của doanh nghiệp nhỏ
+• Sự kiện bảo mật, cảnh báo đăng nhập và tín hiệu kiểm toán
+
+HOẠT ĐỘNG VỚI NHỮNG GÌ BẠN ĐANG DÙNG
+Bất cứ thứ gì gửi được yêu cầu HTTP đều gửi được thông báo Echobell: script shell, Python, Node, nền tảng tự động hóa, hệ thống giám sát, dịch vụ kiểm tra uptime, CI runner, hub nhà thông minh và bot giao dịch. Không cần cài SDK, không cần chạy agent.
+
+PREMIUM
+Echobell Premium mở khóa số kênh và khóa trực tiếp không giới hạn cùng cảnh báo kiểu cuộc gọi. Điểm mời bạn bè cũng có thể đổi lấy quyền truy cập premium.
+
+Echobell không thay thế hệ thống giám sát, nền tảng tự động hóa hay công cụ quản lý sự cố của bạn. Nó bổ sung một lớp cảnh báo di động nhanh, để những sự kiện quan trọng đến được chiếc điện thoại bạn thực sự mang theo.

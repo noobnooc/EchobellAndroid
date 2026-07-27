@@ -1,0 +1,1 @@
+Webhooks como notificaciones push. Las alertas críticas suenan como una llamada.

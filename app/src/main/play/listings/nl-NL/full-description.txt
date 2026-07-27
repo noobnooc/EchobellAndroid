@@ -1,0 +1,37 @@
+Echobell maakt van webhooks en e-mails directe pushmeldingen op je telefoon, en kritieke meldingen kunnen rinkelen als een oproep, zodat een storing niet ongelezen in je meldingenpaneel blijft staan.
+
+Eén HTTP-verzoek en je telefoon weet het. Echobell is gemaakt voor ontwikkelaars, SRE- en ops-teams, indie makers, mensen met self-hosted diensten en een homelab, traders en kleine teams die meldingen nodig hebben die echt aankomen.
+
+DRIE MELDINGSNIVEAUS
+• Standaard — een gewone pushmelding voor routinegebeurtenissen
+• Tijdgevoelig — hogere prioriteit, valt sneller op
+• Oproep — kritieke meldingen rinkelen als een inkomende oproep
+
+KANALEN EN DIRECT KEYS
+• Kanalen groeperen bij elkaar horende meldingen, bevatten sjablonen en voorwaarden en zijn via één abonneerlink met het hele team te delen
+• Direct keys zijn eigen webhook-URL's voor een script, een cronjob of een snelle koppeling
+• Een kanaal start je met een webhookverzoek of met een e-mail naar het adres van het kanaal
+
+ELKE MELDING LEESBAAR
+• Sjablonen voor titel en tekst maken van een ruwe JSON-payload een zin waar je iets mee kunt
+• Voorwaarden filteren ruis: alleen gebeurtenissen die ertoe doen worden een melding
+• Linksjablonen openen vanuit de melding meteen het juiste dashboard, de grafiek, de runbook of de storingspagina
+• Meldingsgeschiedenis blijft op dit apparaat en is altijd terug te lezen
+
+WAARVOOR ECHOBELL WORDT GEBRUIKT
+• Servermonitoring, uptimechecks, meldingen bij uitval en herstel
+• Productiestoringen, API-fouten, piketdienst en statuswijzigingen
+• CI/CD-pipelines, deploymeldingen, mislukte builds en releases
+• Cronjobs, back-ups, geplande taken en heartbeatmonitoring
+• Domotica, self-hosted diensten, NAS en homelab-sensoren
+• Koersmeldingen voor aandelen en crypto, handelssignalen en strategiescripts
+• Betalingen, bestellingen en klantgebeurtenissen van kleine bedrijven
+• Beveiligingsgebeurtenissen, inlogmeldingen en auditsignalen
+
+WERKT MET WAT JE AL HEBT
+Alles wat een HTTP-verzoek kan versturen, kan een Echobell-melding versturen: shellscripts, Python, Node, automatiseringsplatforms, monitoringstacks, uptimediensten, CI-runners, domoticahubs en handelsbots. Geen SDK te installeren, geen agent die moet draaien.
+
+PREMIUM
+Echobell Premium ontgrendelt onbeperkte kanalen, onbeperkte direct keys en meldingen in oproepstijl. Uitnodigingspunten zijn ook in te wisselen voor premiumtoegang.
+
+Echobell vervangt je monitoringstack, automatiseringsplatform of incidenttool niet. Het legt er een snelle mobiele meldingslaag overheen, zodat wat belangrijk is de telefoon bereikt die je echt bij je draagt.

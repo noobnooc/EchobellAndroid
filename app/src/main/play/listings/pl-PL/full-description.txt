@@ -1,0 +1,37 @@
+Echobell zamienia webhooki i e-maile w natychmiastowe powiadomienia push na telefonie, a krytyczne alerty mogą dzwonić jak połączenie, więc awaria nie zostanie przeoczona w panelu powiadomień.
+
+Jedno żądanie HTTP i telefon już wie. Echobell powstał dla programistów, zespołów SRE i ops, niezależnych twórców, osób hostujących własne usługi i homelaby, traderów oraz małych zespołów, które potrzebują alertów naprawdę docierających do adresata.
+
+TRZY POZIOMY ALERTÓW
+• Standardowy — zwykłe powiadomienie push dla rutynowych zdarzeń
+• Pilny — wyższy priorytet, szybciej zauważalny
+• Połączenie — krytyczne alerty dzwonią jak połączenie przychodzące
+
+KANAŁY I KLUCZE BEZPOŚREDNIE
+• Kanały grupują powiązane alerty, przechowują szablony i warunki, a link subskrypcji pozwala zapisać cały zespół
+• Klucze bezpośrednie to dedykowane adresy webhook dla skryptu, zadania cron lub szybkiej integracji
+• Kanał uruchamia się żądaniem webhook albo e-mailem wysłanym na jego adres
+
+KAŻDY ALERT CZYTELNY
+• Szablony tytułu i treści zamieniają surowy payload JSON w zdanie, na które można od razu zareagować
+• Warunki odfiltrowują szum: powiadomieniem stają się tylko istotne zdarzenia
+• Szablony linków otwierają prosto z alertu właściwy pulpit, wykres, runbook lub stronę incydentu
+• Historia powiadomień zostaje na tym urządzeniu i jest zawsze pod ręką
+
+DO CZEGO SŁUŻY ECHOBELL
+• Monitoring serwerów, testy dostępności, alerty o awarii i przywróceniu
+• Incydenty produkcyjne, błędy API, dyżury i zmiany statusu
+• Pipeline'y CI/CD, powiadomienia o wdrożeniach, nieudane buildy i wydania
+• Zadania cron, kopie zapasowe, zadania zaplanowane i monitoring heartbeat
+• Smart home, usługi self-hosted, NAS i czujniki homelabu
+• Alerty cenowe akcji i kryptowalut, sygnały tradingowe i skrypty strategii
+• Płatności, zamówienia i zdarzenia klientów w małych firmach
+• Zdarzenia bezpieczeństwa, alerty logowania i sygnały audytowe
+
+DZIAŁA Z TYM, CO JUŻ MASZ
+Wszystko, co potrafi wysłać żądanie HTTP, może wysłać powiadomienie Echobell: skrypty powłoki, Python, Node, platformy automatyzacji, stosy monitoringu, usługi uptime, runnery CI, huby smart home i boty tradingowe. Bez SDK do instalacji i bez agenta w tle.
+
+PREMIUM
+Echobell Premium odblokowuje nielimitowane kanały, nielimitowane klucze bezpośrednie i alerty w stylu połączenia. Punkty za zaproszenia również można wymienić na dostęp premium.
+
+Echobell nie zastępuje twojego monitoringu, platformy automatyzacji ani narzędzia do incydentów. Dokłada do nich szybką mobilną warstwę alertów, żeby ważne zdarzenia docierały na telefon, który faktycznie nosisz przy sobie.

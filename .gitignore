@@ -16,6 +16,10 @@
 .cxx
 local.properties
 
+# Generated Play listing graphics. The listing text next to these stays
+# tracked; only the rendered screenshots and feature graphics are excluded.
+app/src/main/play/listings/*/graphics/
+
 # Local release signing material.
 /.local-signing/
 *.jks

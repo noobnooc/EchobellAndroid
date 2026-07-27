@@ -1,0 +1,1 @@
+Webhook'lar anlık bildirime dönüşür. Kritik uyarılar arama gibi çalabilir.

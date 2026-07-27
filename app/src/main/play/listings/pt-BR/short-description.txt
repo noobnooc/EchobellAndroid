@@ -1,0 +1,1 @@
+Webhooks viram notificações push. Alertas críticos tocam como uma ligação.

@@ -1,0 +1,1 @@
+Webhooks als Push-Benachrichtigung. Kritische Alarme klingeln wie ein Anruf.
